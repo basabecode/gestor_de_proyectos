@@ -4,6 +4,17 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.js'],
+    alias: { '@/': new URL('./src/', import.meta.url).pathname },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      include: ['src/lib/**', 'src/stores/**', 'src/components/board/**'],
+    },
+  },
   server: { port: 3000, open: true },
   resolve: {
     alias: {

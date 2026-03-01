@@ -27,7 +27,7 @@ import AddColumnButton from './AddColumnButton';
 import { cn } from '../../lib/utils';
 import { GROUP_COLORS, STATUS_COLORS, STATUS_LABELS } from '../../lib/constants';
 
-export default function GroupSection({ board, group, items, columns }) {
+export default function GroupSection({ board, group, items = [], columns = [], riskLensMap = {} }) {
   const { toggleGroupCollapse, updateGroup, deleteGroup, addItem, reorderItems } = useBoardStore();
   const { executeAutomations } = useAutomationStore();
   const [editingTitle, setEditingTitle] = useState(false);
@@ -218,6 +218,7 @@ export default function GroupSection({ board, group, items, columns }) {
                   columns={columns}
                   groupColor={group.color}
                   sortable
+                  riskScore={riskLensMap[item.id]}
                 />
               ))}
             </SortableContext>

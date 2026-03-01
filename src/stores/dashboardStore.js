@@ -3,25 +3,31 @@ import { persist } from 'zustand/middleware';
 import { generateId } from '../lib/utils';
 
 const DEFAULT_WIDGETS = [
-  { id: 'w_summary', type: 'summary', title: 'Resumen general', size: 'full', order: 0 },
-  { id: 'w_pie', type: 'status_pie', title: 'Distribución por estado', size: 'half', order: 1 },
-  { id: 'w_bar', type: 'board_bar', title: 'Elementos por tablero', size: 'half', order: 2 },
-  { id: 'w_activity', type: 'recent_activity', title: 'Actividad reciente', size: 'two_thirds', order: 3 },
-  { id: 'w_team', type: 'team', title: 'Equipo', size: 'third', order: 4 },
-  { id: 'w_workload', type: 'workload', title: 'Carga de trabajo', size: 'half', order: 5 },
-  { id: 'w_priority', type: 'priority_dist', title: 'Distribución por prioridad', size: 'half', order: 6 },
+  { id: 'w_summary',  type: 'summary',         title: 'Resumen general',           size: 'full',       order: 0 },
+  { id: 'w_health',   type: 'project_health',  title: 'Salud de proyectos',        size: 'full',       order: 1 },
+  { id: 'w_pie',      type: 'status_pie',      title: 'Distribución por estado',   size: 'half',       order: 2 },
+  { id: 'w_bar',      type: 'board_bar',       title: 'Elementos por tablero',     size: 'half',       order: 3 },
+  { id: 'w_evm',      type: 'evm_trend',       title: 'Tendencia EVM',             size: 'full',       order: 4 },
+  { id: 'w_risk',     type: 'risk_overview',   title: 'Resumen de riesgos',        size: 'half',       order: 5 },
+  { id: 'w_activity', type: 'recent_activity', title: 'Actividad reciente',        size: 'two_thirds', order: 6 },
+  { id: 'w_team',     type: 'team',            title: 'Equipo',                    size: 'third',      order: 7 },
+  { id: 'w_workload', type: 'workload',        title: 'Carga de trabajo',          size: 'half',       order: 8 },
+  { id: 'w_priority', type: 'priority_dist',   title: 'Distribución por prioridad',size: 'half',       order: 9 },
 ];
 
 const WIDGET_TYPES = {
-  summary: { label: 'Resumen general', defaultSize: 'full' },
-  status_pie: { label: 'Estado (gráfico circular)', defaultSize: 'half' },
-  board_bar: { label: 'Elementos por tablero', defaultSize: 'half' },
-  recent_activity: { label: 'Actividad reciente', defaultSize: 'two_thirds' },
-  team: { label: 'Equipo', defaultSize: 'third' },
-  workload: { label: 'Carga de trabajo', defaultSize: 'half' },
-  priority_dist: { label: 'Prioridad (gráfico)', defaultSize: 'half' },
-  overdue: { label: 'Elementos vencidos', defaultSize: 'half' },
-  completion_trend: { label: 'Tendencia de completados', defaultSize: 'half' },
+  summary:         { label: 'Resumen general',             defaultSize: 'full'       },
+  project_health:  { label: 'Salud de proyectos (heatmap)',defaultSize: 'full'       },
+  evm_trend:       { label: 'Tendencia EVM (CPI/SPI)',     defaultSize: 'full'       },
+  risk_overview:   { label: 'Resumen de riesgos',          defaultSize: 'half'       },
+  status_pie:      { label: 'Estado (gráfico circular)',   defaultSize: 'half'       },
+  board_bar:       { label: 'Elementos por tablero',       defaultSize: 'half'       },
+  recent_activity: { label: 'Actividad reciente',          defaultSize: 'two_thirds' },
+  team:            { label: 'Equipo',                      defaultSize: 'third'      },
+  workload:        { label: 'Carga de trabajo',            defaultSize: 'half'       },
+  priority_dist:   { label: 'Prioridad (gráfico)',         defaultSize: 'half'       },
+  overdue:         { label: 'Elementos vencidos',          defaultSize: 'half'       },
+  completion_trend:{ label: 'Tendencia de completados',    defaultSize: 'half'       },
 };
 
 const useDashboardStore = create(
@@ -70,7 +76,8 @@ const useDashboardStore = create(
     }),
     {
       name: 'workos-dashboard',
-      version: 1,
+      version: 2,
+      migrate: (_oldState, _version) => ({ widgets: [...DEFAULT_WIDGETS], editMode: false }),
     }
   )
 );

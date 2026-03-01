@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Bell, HelpCircle, User, CheckCheck, AtSign, Zap, MessageSquare, Calendar, UserPlus, Menu } from 'lucide-react';
+import { Search, Bell, HelpCircle, User, CheckCheck, AtSign, Zap, MessageSquare, Calendar, UserPlus, Menu, LogOut, Settings } from 'lucide-react';
 import useUIStore from '../../stores/uiStore';
 import useNotificationStore from '../../stores/notificationStore';
+import useAuthStore from '../../stores/authStore';
 import { Avatar } from '../ui';
 import { cn, formatRelativeDate } from '../../lib/utils';
 
@@ -19,10 +20,18 @@ export default function TopBar({ title, children }) {
   const navigate = useNavigate();
   const { openSearch, toggleMobileSidebar } = useUIStore();
   const { notifications, markAsRead, markAllAsRead, getUnreadCount } = useNotificationStore();
+  const { profile, signOut } = useAuthStore();
+
   const [showNotifs, setShowNotifs] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const unreadCount = getUnreadCount();
   const recentNotifs = notifications.slice(0, 8);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   return (
     <header className="h-12 bg-white border-b border-border-light flex items-center justify-between px-3 md:px-4 shrink-0">
@@ -138,8 +147,45 @@ export default function TopBar({ title, children }) {
         <button className="hidden sm:block p-2 hover:bg-surface-secondary rounded-md transition-colors" title="Ayuda">
           <HelpCircle className="w-[18px] h-[18px] text-text-secondary" />
         </button>
-        <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white text-[12px] font-semibold ml-1 cursor-pointer">
-          U
+
+        {/* User Profile Dropdown */}
+        <div className="relative ml-1">
+          <div
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="w-8 h-8 bg-primary hover:bg-primary-hover rounded-full flex items-center justify-center text-white text-[12px] font-semibold cursor-pointer transition-colors shadow-sm"
+            style={{ backgroundColor: profile?.color || '#00c875' }}
+            title={profile?.full_name || 'Mi Perfil'}
+          >
+            {(profile?.full_name || 'U').charAt(0).toUpperCase()}
+          </div>
+
+          {showUserMenu && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setShowUserMenu(false)} />
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-border-light z-40 animate-slide-down py-1">
+                <div className="px-4 py-3 border-b border-border-light mb-1">
+                  <p className="text-[13px] font-semibold text-text-primary truncate">{profile?.full_name || 'Usuario'}</p>
+                  <p className="text-[11px] text-text-secondary truncate mt-0.5">{profile?.email || 'Miembro'}</p>
+                </div>
+
+                <button
+                  onClick={() => { setShowUserMenu(false); navigate('/settings'); }}
+                  className="w-full text-left px-4 py-2 text-[13px] text-text-primary hover:bg-surface-secondary flex items-center gap-2 transition-colors"
+                >
+                  <Settings className="w-4 h-4 text-text-secondary" /> Configuración
+                </button>
+
+                <div className="my-1 border-t border-border-light" />
+
+                <button
+                  onClick={handleSignOut}
+                  className="w-full text-left px-4 py-2 text-[13px] text-status-red hover:bg-status-red-light flex items-center gap-2 font-medium transition-colors"
+                >
+                  <LogOut className="w-4 h-4" /> Cerrar sesión
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </header>

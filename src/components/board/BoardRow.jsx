@@ -1,7 +1,8 @@
 import { useState, useCallback } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { MoreHorizontal, Trash2, GripVertical, MessageSquare, ChevronRight, Paperclip } from 'lucide-react';
+import { MoreHorizontal, Trash2, GripVertical, MessageSquare, ChevronRight, Paperclip, ShieldAlert } from 'lucide-react';
+import { riskLevel, RISK_LEVEL_COLORS } from '../../stores/riskStore';
 import toast from 'react-hot-toast';
 import useBoardStore from '../../stores/boardStore';
 import useAutomationStore, { TRIGGER_TYPES } from '../../stores/automationStore';
@@ -32,7 +33,7 @@ const cellComponents = {
   [COLUMN_TYPES.TAG]: TagCell,
 };
 
-export default function BoardRow({ board, item, columns, groupColor, sortable }) {
+export default function BoardRow({ board, item, columns, groupColor, sortable, riskScore: itemRiskScore }) {
   const { updateItem, updateItemColumn, deleteItem } = useBoardStore();
   const { executeAutomations } = useAutomationStore();
   const { addNotification } = useNotificationStore();
@@ -162,6 +163,16 @@ export default function BoardRow({ board, item, columns, groupColor, sortable })
           />
         ) : (
           <div className="flex items-center gap-2">
+            {itemRiskScore != null && (
+              <span
+                className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold text-white shrink-0"
+                style={{ backgroundColor: RISK_LEVEL_COLORS[riskLevel(itemRiskScore)].bg }}
+                title={`Riesgo: ${itemRiskScore}`}
+              >
+                <ShieldAlert className="w-3 h-3" />
+                {itemRiskScore}
+              </span>
+            )}
             <span
               className="text-[13px] font-medium text-text-primary cursor-pointer hover:text-primary transition-colors"
               onClick={() => setEditingTitle(true)}

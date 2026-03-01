@@ -16,16 +16,24 @@ import {
   Clock,
   GanttChart,
   Zap,
+  Bot,
+  BarChart2,
+  ShieldAlert,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useBoardStore from '../../stores/boardStore';
+import useRiskStore, { riskScore, riskLevel, RISK_LEVEL_COLORS } from '../../stores/riskStore';
 import GroupSection from './GroupSection';
 import KanbanView from './views/KanbanView';
 import CalendarView from './views/CalendarView';
 import TimelineView from './views/TimelineView';
 import GanttView from './views/GanttView';
 import AutomationsPanel from './AutomationsPanel';
+import AIAssistantPanel from './AIAssistantPanel';
+import PMISPanel from './PMISPanel';
+import RiskPanel from './RiskPanel';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS } from '../../lib/constants';
+import { Guard } from '../auth/Guard';
 
 const VIEW_TABS = [
   { id: 'table', label: 'Tabla', icon: LayoutGrid },
@@ -58,10 +66,41 @@ export default function BoardView({ board }) {
   // Automations
   const [showAutomations, setShowAutomations] = useState(false);
 
+  // AI Assistant
+  const [showAI, setShowAI] = useState(false);
+
+  // PMIS panel
+  const [showPMIS, setShowPMIS] = useState(false);
+
+  // Risk panel + lens
+  const [showRisk,     setShowRisk]     = useState(false);
+  const [riskLensOn,   setRiskLensOn]   = useState(false);
+  const { risks } = useRiskStore();
+
+  // Only one side-panel open at a time
+  const openAI   = () => { setShowAI(true);   setShowPMIS(false); setShowRisk(false); };
+  const openPMIS = () => { setShowPMIS(true);  setShowAI(false);  setShowRisk(false); };
+  const openRisk = () => { setShowRisk(true);  setShowAI(false);  setShowPMIS(false); };
+
+  // Risk lens map: itemId → max score (only open risks)
+  const riskLensMap = useMemo(() => {
+    if (!riskLensOn) return {};
+    const map = {};
+    risks
+      .filter((r) => r.board_id === board.id && r.status !== 'closed' && r.item_id)
+      .forEach((r) => {
+        const score = riskScore(r);
+        if (!map[r.item_id] || score > map[r.item_id]) {
+          map[r.item_id] = score;
+        }
+      });
+    return map;
+  }, [riskLensOn, risks, board.id]);
+
   // Unique people in board
   const people = useMemo(() => {
     const set = new Set();
-    board.items.forEach((i) => {
+    (board.items ?? []).forEach((i) => {
       const p = i.columnValues?.person;
       if (p) set.add(p);
     });
@@ -72,7 +111,7 @@ export default function BoardView({ board }) {
 
   // Apply filters
   const filteredItems = useMemo(() => {
-    let items = board.items;
+    let items = board.items ?? [];
 
     if (searchTerm) {
       items = items.filter((item) => item.title.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -121,7 +160,7 @@ export default function BoardView({ board }) {
   const handleExportCSV = () => {
     const rows = [['Título', 'Estado', 'Persona', 'Fecha', 'Prioridad', 'Grupo']];
     filteredItems.forEach((item) => {
-      const group = board.groups.find((g) => g.id === item.groupId);
+      const group = (board.groups ?? []).find((g) => g.id === item.groupId);
       rows.push([
         item.title,
         STATUS_LABELS[item.columnValues?.status] || '',
@@ -272,7 +311,7 @@ export default function BoardView({ board }) {
                 <div className="fixed inset-0 z-10" onClick={() => setShowSort(false)} />
                 <div className="absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-lg border border-border-light py-1 z-20 animate-slide-down">
                   <p className="px-3 py-1.5 text-[10px] font-semibold text-text-disabled uppercase">Ordenar por</p>
-                  {[{ id: 'title', label: 'Título' }, ...board.columns.map((c) => ({ id: c.id, label: c.title }))].map((col) => (
+                  {[{ id: 'title', label: 'Título' }, ...(board.columns ?? []).map((c) => ({ id: c.id, label: c.title }))].map((col) => (
                     <button
                       key={col.id}
                       onClick={() => {
@@ -305,18 +344,58 @@ export default function BoardView({ board }) {
             )}
           </div>
 
-          {/* Automations */}
+          {/* Automations — solo owner/admin */}
+          <Guard action="manage:automations">
+            <button
+              onClick={() => setShowAutomations(true)}
+              className="p-1.5 hover:bg-surface-secondary rounded transition-colors"
+              title="Automatizaciones"
+            >
+              <Zap className="w-4 h-4 text-text-secondary" />
+            </button>
+          </Guard>
+
+          {/* Export — owner/admin/member */}
+          <Guard action="export:data">
+            <button onClick={handleExportCSV} className="p-1.5 hover:bg-surface-secondary rounded transition-colors" title="Exportar CSV">
+              <Download className="w-4 h-4 text-text-secondary" />
+            </button>
+          </Guard>
+
+          {/* PMIS Metrics */}
           <button
-            onClick={() => setShowAutomations(true)}
-            className="p-1.5 hover:bg-surface-secondary rounded transition-colors"
-            title="Automatizaciones"
+            onClick={() => (showPMIS ? setShowPMIS(false) : openPMIS())}
+            className={`p-1.5 rounded transition-colors ${showPMIS ? 'bg-primary/10 text-primary' : 'hover:bg-surface-secondary'}`}
+            title="Métricas PMIS"
           >
-            <Zap className="w-4 h-4 text-text-secondary" />
+            <BarChart2 className="w-4 h-4 text-text-secondary" />
           </button>
 
-          {/* Export */}
-          <button onClick={handleExportCSV} className="p-1.5 hover:bg-surface-secondary rounded transition-colors" title="Exportar CSV">
-            <Download className="w-4 h-4 text-text-secondary" />
+          {/* Risk Panel + Lens */}
+          <button
+            onClick={() => (showRisk ? setShowRisk(false) : openRisk())}
+            className={`p-1.5 rounded transition-colors ${showRisk ? 'bg-status-red/10 text-status-red' : 'hover:bg-surface-secondary'}`}
+            title="Gestión de Riesgos"
+          >
+            <ShieldAlert className="w-4 h-4 text-text-secondary" />
+          </button>
+
+          {/* Risk Lens toggle */}
+          <button
+            onClick={() => setRiskLensOn(!riskLensOn)}
+            className={`p-1.5 rounded transition-colors text-[10px] font-bold ${riskLensOn ? 'bg-status-red/10 text-status-red ring-1 ring-status-red/30' : 'hover:bg-surface-secondary text-text-secondary'}`}
+            title="Lente de Riesgo"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+
+          {/* AI Assistant */}
+          <button
+            onClick={() => (showAI ? setShowAI(false) : openAI())}
+            className={`p-1.5 rounded transition-colors ${showAI ? 'bg-primary/10 text-primary' : 'hover:bg-surface-secondary'}`}
+            title="Asistente IA"
+          >
+            <Bot className="w-4 h-4 text-text-secondary" />
           </button>
         </div>
       </div>
@@ -352,22 +431,25 @@ export default function BoardView({ board }) {
       {/* View content */}
       {activeView === 'table' && (
         <div className="flex-1 overflow-auto p-4">
-          {board.groups.map((group) => (
+          {(board.groups ?? []).map((group) => (
             <GroupSection
               key={group.id}
               board={board}
               group={group}
               items={filteredItems.filter((i) => i.groupId === group.id)}
-              columns={board.columns}
+              columns={board.columns ?? []}
+              riskLensMap={riskLensMap}
             />
           ))}
-          <button
-            onClick={() => addGroup(board.id)}
-            className="flex items-center gap-2 px-4 py-2.5 mt-2 text-[13px] text-text-secondary hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Agregar nuevo grupo
-          </button>
+          <Guard action="create:board">
+            <button
+              onClick={() => addGroup(board.id)}
+              className="flex items-center gap-2 px-4 py-2.5 mt-2 text-[13px] text-text-secondary hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Agregar nuevo grupo
+            </button>
+          </Guard>
         </div>
       )}
 
@@ -383,6 +465,21 @@ export default function BoardView({ board }) {
           onClose={() => setShowAutomations(false)}
           board={board}
         />
+      )}
+
+      {/* AI Assistant panel */}
+      {showAI && (
+        <AIAssistantPanel board={board} onClose={() => setShowAI(false)} />
+      )}
+
+      {/* PMIS panel */}
+      {showPMIS && (
+        <PMISPanel board={board} onClose={() => setShowPMIS(false)} />
+      )}
+
+      {/* Risk panel */}
+      {showRisk && (
+        <RiskPanel board={board} onClose={() => setShowRisk(false)} />
       )}
     </div>
   );

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   DndContext, DragOverlay, PointerSensor, useSensor, useSensors, closestCenter,
@@ -8,17 +8,20 @@ import { CSS } from '@dnd-kit/utilities';
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  LineChart, Line,
+  LineChart, Line, ReferenceLine,
 } from 'recharts';
 import {
   LayoutGrid, TrendingUp, CheckCircle2, AlertTriangle,
   Clock, Users, GripVertical, X, Plus, Settings2, RotateCcw,
-  AlertCircle,
+  AlertCircle, ShieldAlert, Flame, DollarSign, CalendarClock,
 } from 'lucide-react';
 import TopBar from '../components/layout/TopBar';
 import { Avatar } from '../components/ui';
 import useBoardStore from '../stores/boardStore';
+import useRiskStore, { riskScore, riskLevel, RISK_LEVEL_COLORS } from '../stores/riskStore';
 import useDashboardStore, { WIDGET_TYPES } from '../stores/dashboardStore';
+import { calculateEVM, getHealthStatus, getPctPlanned, formatCurrency, HEALTH_CONFIG } from '../lib/pmis';
+import { supabase } from '../lib/supabase';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS } from '../lib/constants';
 import { formatRelativeDate, cn } from '../lib/utils';
 
@@ -242,15 +245,18 @@ function WidgetCard({ widget, editMode, onRemove, dragHandleProps, stats, boards
 
       {/* Widget content */}
       <div className="p-4">
-        {widget.type === 'summary' && <SummaryWidget stats={stats} />}
-        {widget.type === 'status_pie' && <StatusPieWidget stats={stats} />}
-        {widget.type === 'board_bar' && <BoardBarWidget stats={stats} />}
+        {widget.type === 'summary'         && <SummaryWidget stats={stats} />}
+        {widget.type === 'project_health'  && <ProjectHealthWidget boards={boards} navigate={navigate} />}
+        {widget.type === 'evm_trend'       && <EVMTrendWidget boards={boards} />}
+        {widget.type === 'risk_overview'   && <RiskOverviewWidget boards={boards} navigate={navigate} />}
+        {widget.type === 'status_pie'      && <StatusPieWidget stats={stats} />}
+        {widget.type === 'board_bar'       && <BoardBarWidget stats={stats} />}
         {widget.type === 'recent_activity' && <RecentActivityWidget stats={stats} boards={boards} navigate={navigate} />}
-        {widget.type === 'team' && <TeamWidget stats={stats} />}
-        {widget.type === 'workload' && <WorkloadWidget stats={stats} />}
-        {widget.type === 'priority_dist' && <PriorityWidget stats={stats} />}
-        {widget.type === 'overdue' && <OverdueWidget stats={stats} boards={boards} navigate={navigate} />}
-        {widget.type === 'completion_trend' && <CompletionTrendWidget boards={boards} />}
+        {widget.type === 'team'            && <TeamWidget stats={stats} />}
+        {widget.type === 'workload'        && <WorkloadWidget stats={stats} />}
+        {widget.type === 'priority_dist'   && <PriorityWidget stats={stats} />}
+        {widget.type === 'overdue'         && <OverdueWidget stats={stats} boards={boards} navigate={navigate} />}
+        {widget.type === 'completion_trend'&& <CompletionTrendWidget boards={boards} />}
       </div>
     </div>
   );
@@ -516,5 +522,313 @@ function CompletionTrendWidget({ boards }) {
         <Line type="monotone" dataKey="Completados" stroke="#00c875" strokeWidth={2} dot={{ r: 3, fill: '#00c875' }} />
       </LineChart>
     </ResponsiveContainer>
+  );
+}
+
+// ── M-08 NEW WIDGETS ──────────────────────────────────────────────────────────
+
+// Helper: compute per-board health using PMIS
+function boardHealth(board) {
+  const items      = board.items ?? [];
+  const total      = items.length;
+  const done       = items.filter((i) => i.columnValues?.status === 'done').length;
+  const pctComplete = total > 0 ? (done / total) * 100 : 0;
+  const pctPlanned  = getPctPlanned(board.plannedStart, board.plannedEnd);
+  const evm         = calculateEVM({
+    bac:         board.budget,
+    pctComplete,
+    pctPlanned,
+    actualCost:  board.actualCost,
+  });
+  const status = evm
+    ? getHealthStatus(evm.cpi, evm.spi)
+    : (total === 0 ? 'unknown' : pctComplete >= 90 ? 'healthy' : 'unknown');
+
+  return { evm, status, pctComplete, pctPlanned };
+}
+
+// 1 ── Project Health Heatmap ──────────────────────────────────────────────────
+
+function ProjectHealthWidget({ boards, navigate }) {
+  if (boards.length === 0) {
+    return <p className="text-[13px] text-text-disabled py-6 text-center">Sin tableros</p>;
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+      {boards.map((board) => {
+        const { evm, status, pctComplete, pctPlanned } = boardHealth(board);
+        const cfg = HEALTH_CONFIG[status];
+
+        return (
+          <div
+            key={board.id}
+            onClick={() => navigate(`/board/${board.id}`)}
+            className="rounded-lg border border-border-light overflow-hidden cursor-pointer hover:shadow-md transition-shadow group"
+            style={{ borderTopColor: cfg.color, borderTopWidth: 3 }}
+          >
+            {/* Name row */}
+            <div className="px-3 pt-2.5 pb-1.5 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundColor: cfg.color }}
+                />
+                <span className="text-[13px] font-semibold text-text-primary truncate group-hover:text-primary transition-colors">
+                  {board.name}
+                </span>
+              </div>
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
+                style={{ backgroundColor: cfg.bg, color: cfg.color }}
+              >
+                {cfg.label}
+              </span>
+            </div>
+
+            {/* Pillars */}
+            <div className="grid grid-cols-3 divide-x divide-border-light border-t border-border-light">
+              {/* Scope */}
+              <PillarCell
+                icon={Flame}
+                label="Alcance"
+                value={`${Math.round(pctComplete)}%`}
+                color={pctComplete >= 90 ? '#00c875' : pctComplete >= 50 ? '#fdab3d' : '#e2445c'}
+                title="% de tareas completadas"
+              />
+              {/* Schedule */}
+              <PillarCell
+                icon={CalendarClock}
+                label="Tiempo"
+                value={evm?.spi != null ? evm.spi.toFixed(2) : '—'}
+                color={evm?.spi == null ? '#9ca3af' : evm.spi >= 0.9 ? '#00c875' : evm.spi >= 0.7 ? '#fdab3d' : '#e2445c'}
+                title="SPI (Schedule Performance Index)"
+              />
+              {/* Budget */}
+              <PillarCell
+                icon={DollarSign}
+                label="Costo"
+                value={evm?.cpi != null ? evm.cpi.toFixed(2) : '—'}
+                color={evm?.cpi == null ? '#9ca3af' : evm.cpi >= 0.9 ? '#00c875' : evm.cpi >= 0.7 ? '#fdab3d' : '#e2445c'}
+                title="CPI (Cost Performance Index)"
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function PillarCell({ icon: Icon, label, value, color, title }) {
+  return (
+    <div className="flex flex-col items-center py-2 px-1" title={title}>
+      <Icon className="w-3.5 h-3.5 mb-0.5" style={{ color }} />
+      <span className="text-[12px] font-bold" style={{ color }}>{value}</span>
+      <span className="text-[9px] text-text-disabled uppercase tracking-wide">{label}</span>
+    </div>
+  );
+}
+
+// 2 ── EVM Trend ───────────────────────────────────────────────────────────────
+
+function EVMTrendWidget({ boards }) {
+  const [selectedBoard, setSelectedBoard] = useState(boards[0]?.id || '');
+  const [snapshots, setSnapshots]         = useState([]);
+  const [loading, setLoading]             = useState(false);
+
+  useEffect(() => {
+    if (!selectedBoard) return;
+    setLoading(true);
+    supabase
+      .from('progress_snapshots')
+      .select('*')
+      .eq('board_id', selectedBoard)
+      .order('snapshot_date', { ascending: true })
+      .then(({ data }) => {
+        setSnapshots(data || []);
+        setLoading(false);
+      });
+  }, [selectedBoard]);
+
+  // Compute current metrics for reference lines
+  const board = boards.find((b) => b.id === selectedBoard);
+  const currentHealth = board ? boardHealth(board) : null;
+
+  const chartData = snapshots.map((s) => ({
+    date: new Date(s.snapshot_date).toLocaleDateString('es', { month: 'short', day: 'numeric' }),
+    CPI:  s.cpi  != null ? parseFloat(s.cpi.toFixed(3))  : null,
+    SPI:  s.spi  != null ? parseFloat(s.spi.toFixed(3))  : null,
+    'EV%': s.pct_complete != null ? parseFloat(s.pct_complete.toFixed(1)) : null,
+  }));
+
+  return (
+    <div>
+      {/* Board selector */}
+      <div className="flex items-center gap-2 mb-3">
+        <select
+          value={selectedBoard}
+          onChange={(e) => setSelectedBoard(e.target.value)}
+          className="text-[12px] border border-border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary bg-white"
+        >
+          {boards.map((b) => (
+            <option key={b.id} value={b.id}>{b.name}</option>
+          ))}
+        </select>
+        {board && (
+          <span
+            className="text-[11px] font-medium px-2 py-0.5 rounded-full"
+            style={{
+              backgroundColor: HEALTH_CONFIG[currentHealth?.status || 'unknown'].bg,
+              color:           HEALTH_CONFIG[currentHealth?.status || 'unknown'].color,
+            }}
+          >
+            {HEALTH_CONFIG[currentHealth?.status || 'unknown'].label}
+          </span>
+        )}
+      </div>
+
+      {loading && <p className="text-[12px] text-text-disabled text-center py-6">Cargando snapshots…</p>}
+
+      {!loading && snapshots.length === 0 && (
+        <div className="text-center py-6">
+          <p className="text-[13px] text-text-secondary mb-1">Sin snapshots registrados</p>
+          <p className="text-[11px] text-text-disabled">
+            Abre el panel PMIS del tablero y guarda un snapshot para ver la tendencia histórica.
+          </p>
+        </div>
+      )}
+
+      {!loading && snapshots.length > 0 && (
+        <ResponsiveContainer width="100%" height={200}>
+          <LineChart data={chartData} margin={{ top: 5, right: 15, left: -10, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e6e9ef" />
+            <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+            <YAxis
+              tick={{ fontSize: 10 }}
+              domain={[0, 1.5]}
+              tickFormatter={(v) => v.toFixed(1)}
+            />
+            <Tooltip
+              contentStyle={{ fontSize: '12px', borderRadius: '8px' }}
+              formatter={(v, name) => [v?.toFixed(2) ?? '—', name]}
+            />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            {/* Healthy threshold reference */}
+            <ReferenceLine y={1.0} stroke="#e6e9ef" strokeDasharray="4 2" label={{ value: '1.0', fontSize: 9, fill: '#9ca3af' }} />
+            <ReferenceLine y={0.9} stroke="#fdab3d" strokeDasharray="3 2" label={{ value: '0.9', fontSize: 9, fill: '#fdab3d' }} />
+            <Line
+              type="monotone" dataKey="CPI" name="CPI (costo)"
+              stroke="#579bfc" strokeWidth={2} dot={{ r: 3 }}
+              connectNulls
+            />
+            <Line
+              type="monotone" dataKey="SPI" name="SPI (cronograma)"
+              stroke="#00c875" strokeWidth={2} dot={{ r: 3 }}
+              connectNulls
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      )}
+
+      {/* Budget summary for selected board */}
+      {board && board.budget > 0 && (
+        <div className="mt-3 grid grid-cols-3 gap-2 pt-3 border-t border-border-light">
+          {[
+            { label: 'Presupuesto', value: formatCurrency(board.budget, true), color: '#579bfc' },
+            { label: 'Costo actual', value: formatCurrency(board.actualCost, true), color: '#fdab3d' },
+            { label: 'EAC estimado', value: formatCurrency(currentHealth?.evm?.eac, true), color: currentHealth?.evm?.vac < 0 ? '#e2445c' : '#00c875' },
+          ].map((m) => (
+            <div key={m.label} className="text-center">
+              <p className="text-[14px] font-bold" style={{ color: m.color }}>{m.value}</p>
+              <p className="text-[10px] text-text-disabled">{m.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// 3 ── Risk Overview ───────────────────────────────────────────────────────────
+
+function RiskOverviewWidget({ boards, navigate }) {
+  const { risks } = useRiskStore();
+
+  const boardRisks = useMemo(() => {
+    return boards
+      .map((b) => {
+        const boardRisks = risks.filter((r) => r.board_id === b.id && r.status !== 'closed');
+        const byLevel = { critical: 0, high: 0, medium: 0, low: 0 };
+        boardRisks.forEach((r) => {
+          byLevel[riskLevel(riskScore(r))]++;
+        });
+        return { id: b.id, name: b.name.length > 14 ? b.name.slice(0, 14) + '…' : b.name, ...byLevel, total: boardRisks.length };
+      })
+      .filter((b) => b.total > 0);
+  }, [boards, risks]);
+
+  const totalCritical = boardRisks.reduce((s, b) => s + b.critical, 0);
+  const totalHigh     = boardRisks.reduce((s, b) => s + b.high,     0);
+
+  if (boardRisks.length === 0) {
+    return (
+      <div className="text-center py-6">
+        <ShieldAlert className="w-8 h-8 text-status-green mx-auto mb-2 opacity-40" />
+        <p className="text-[13px] text-text-disabled">Sin riesgos abiertos registrados</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Summary badges */}
+      {(totalCritical > 0 || totalHigh > 0) && (
+        <div className="flex gap-2 mb-3 flex-wrap">
+          {totalCritical > 0 && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium text-white" style={{ backgroundColor: RISK_LEVEL_COLORS.critical.bg }}>
+              <AlertTriangle className="w-3 h-3" /> {totalCritical} crítico{totalCritical > 1 ? 's' : ''}
+            </span>
+          )}
+          {totalHigh > 0 && (
+            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium text-white" style={{ backgroundColor: RISK_LEVEL_COLORS.high.bg }}>
+              {totalHigh} alto{totalHigh > 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+      )}
+
+      <ResponsiveContainer width="100%" height={Math.min(180, boardRisks.length * 36 + 20)}>
+        <BarChart
+          data={boardRisks}
+          layout="vertical"
+          margin={{ top: 0, right: 5, left: 0, bottom: 0 }}
+          onClick={(d) => d?.activePayload && navigate(`/board/${d.activePayload[0]?.payload?.id}`)}
+          style={{ cursor: 'pointer' }}
+        >
+          <CartesianGrid strokeDasharray="3 3" stroke="#e6e9ef" horizontal={false} />
+          <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+          <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={90} />
+          <Tooltip
+            contentStyle={{ fontSize: '12px', borderRadius: '8px' }}
+            formatter={(v, name) => [v, name]}
+          />
+          <Bar dataKey="critical" name="Crítico"  stackId="a" fill={RISK_LEVEL_COLORS.critical.bg} />
+          <Bar dataKey="high"     name="Alto"     stackId="a" fill={RISK_LEVEL_COLORS.high.bg}     />
+          <Bar dataKey="medium"   name="Medio"    stackId="a" fill={RISK_LEVEL_COLORS.medium.bg}   />
+          <Bar dataKey="low"      name="Bajo"     stackId="a" fill={RISK_LEVEL_COLORS.low.bg}      radius={[0, 2, 2, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+
+      {/* Legend */}
+      <div className="flex gap-3 mt-2 justify-center flex-wrap">
+        {Object.entries(RISK_LEVEL_COLORS).map(([level, cfg]) => (
+          <span key={level} className="flex items-center gap-1 text-[10px] text-text-secondary">
+            <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: cfg.bg }} />
+            {cfg.label}
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }

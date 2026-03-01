@@ -5,6 +5,7 @@ import TopBar from '../components/layout/TopBar';
 import { Button } from '../components/ui';
 import useBoardStore from '../stores/boardStore';
 import useUIStore from '../stores/uiStore';
+import { Guard } from '../components/auth/Guard';
 import { cn, formatRelativeDate } from '../lib/utils';
 
 export default function BoardsListPage() {
@@ -51,7 +52,9 @@ export default function BoardsListPage() {
               </button>
             </div>
           </div>
-          <Button onClick={() => openModal('createBoard')} icon={Plus}>Nuevo tablero</Button>
+          <Guard action="create:board">
+            <Button onClick={() => openModal('createBoard')} icon={Plus}>Nuevo tablero</Button>
+          </Guard>
         </div>
 
         {boards.length === 0 ? (
@@ -204,25 +207,31 @@ function BoardMenu({ board, onClose, openModal, duplicateBoard, deleteBoard }) {
     <>
       <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); onClose(); }} />
       <div className="absolute right-0 mt-1 w-40 bg-white rounded-lg shadow-lg border border-border-light py-1 z-20">
-        <button
-          onClick={(e) => { e.stopPropagation(); openModal('editBoard', board); onClose(); }}
-          className="w-full px-3 py-2 text-left text-[13px] text-text-primary hover:bg-surface-secondary flex items-center gap-2"
-        >
-          <Edit3 className="w-4 h-4" /> Editar
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); duplicateBoard(board.id); onClose(); }}
-          className="w-full px-3 py-2 text-left text-[13px] text-text-primary hover:bg-surface-secondary flex items-center gap-2"
-        >
-          <Copy className="w-4 h-4" /> Duplicar
-        </button>
-        <hr className="my-1 border-border-light" />
-        <button
-          onClick={(e) => { e.stopPropagation(); deleteBoard(board.id); onClose(); }}
-          className="w-full px-3 py-2 text-left text-[13px] text-status-red hover:bg-status-red-light flex items-center gap-2"
-        >
-          <Trash2 className="w-4 h-4" /> Eliminar
-        </button>
+        <Guard action="edit:board">
+          <button
+            onClick={(e) => { e.stopPropagation(); openModal('editBoard', board); onClose(); }}
+            className="w-full px-3 py-2 text-left text-[13px] text-text-primary hover:bg-surface-secondary flex items-center gap-2"
+          >
+            <Edit3 className="w-4 h-4" /> Editar
+          </button>
+        </Guard>
+        <Guard action="create:board">
+          <button
+            onClick={(e) => { e.stopPropagation(); duplicateBoard(board.id); onClose(); }}
+            className="w-full px-3 py-2 text-left text-[13px] text-text-primary hover:bg-surface-secondary flex items-center gap-2"
+          >
+            <Copy className="w-4 h-4" /> Duplicar
+          </button>
+        </Guard>
+        <Guard action="delete:board">
+          <hr className="my-1 border-border-light" />
+          <button
+            onClick={(e) => { e.stopPropagation(); deleteBoard(board.id); onClose(); }}
+            className="w-full px-3 py-2 text-left text-[13px] text-status-red hover:bg-status-red-light flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" /> Eliminar
+          </button>
+        </Guard>
       </div>
     </>
   );

@@ -5,18 +5,18 @@
   --color-shatter-primary: #181B34;
   --color-shatter-accent: #6161FF;
 
-  /* Monday.com inspired Work OS palette */
-  --color-primary: #0073ea;
-  --color-primary-hover: #0060b9;
-  --color-primary-light: #cce5ff;
+  /* Wrike inspired Work OS palette */
+  --color-primary: #00c875;
+  --color-primary-hover: #00b065;
+  --color-primary-light: #e6f9f0;
   --color-surface: #ffffff;
-  --color-surface-secondary: #f6f7fb;
-  --color-surface-hover: #dcdfec;
-  --color-border: #d0d4e4;
-  --color-border-light: #e6e9ef;
-  --color-text-primary: #323338;
-  --color-text-secondary: #676879;
-  --color-text-disabled: #c3c6d4;
+  --color-surface-secondary: #f4f6f9;
+  --color-surface-hover: #eef2f6;
+  --color-border: #e2e8f0;
+  --color-border-light: #f1f5f9;
+  --color-text-primary: #081829;
+  --color-text-secondary: #64748b;
+  --color-text-disabled: #cbd5e1;
 
   /* Status colors */
   --color-status-green: #00c875;
@@ -42,11 +42,11 @@
   --color-group-orange: #ff642e;
   --color-group-yellow: #fdab3d;
 
-  /* Sidebar */
-  --color-sidebar-bg: #292f4c;
-  --color-sidebar-hover: #3c4260;
-  --color-sidebar-active: #0073ea;
-  --color-sidebar-text: #d5d8df;
+  /* Sidebar (Premium Dark Slate matching Login Text) */
+  --color-sidebar-bg: #081829;
+  --color-sidebar-hover: #1e293b;
+  --color-sidebar-active: #00c875;
+  --color-sidebar-text: #f8fafc;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -198,6 +198,13 @@ body {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }
 }
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-in-right { animation: slide-in-right 0.25s ease-out; }
 
 /* Table horizontal scroll wrapper */
 .board-table-scroll {

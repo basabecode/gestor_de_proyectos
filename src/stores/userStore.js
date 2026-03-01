@@ -1,98 +1,138 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { generateId } from '../lib/utils';
-
-const DEFAULT_MEMBERS = [
-  { id: 'user-1', name: 'Admin', email: 'admin@workos.com', role: 'owner', avatar: null, color: '#0073ea' },
-  { id: 'user-2', name: 'Ana García', email: 'ana@workos.com', role: 'admin', avatar: null, color: '#00c875' },
-  { id: 'user-3', name: 'Carlos López', email: 'carlos@workos.com', role: 'member', avatar: null, color: '#e2445c' },
-  { id: 'user-4', name: 'María Torres', email: 'maria@workos.com', role: 'member', avatar: null, color: '#a25ddc' },
-  { id: 'user-5', name: 'Pedro Ruiz', email: 'pedro@workos.com', role: 'viewer', avatar: null, color: '#fdab3d' },
-];
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import { supabase } from '@/lib/supabase'
 
 const useUserStore = create(
   persist(
     (set, get) => ({
-      currentUser: DEFAULT_MEMBERS[0],
-      teamMembers: DEFAULT_MEMBERS,
+      // currentUser se sincroniza desde authStore.profile
+      currentUser: null,
+      // teamMembers se cargan desde workspace_members
+      teamMembers: [],
       preferences: {
-        language: 'es',
-        dateFormat: 'DD/MM/YYYY',
-        timeFormat: '24h',
-        weekStart: 'monday',
-        compactMode: false,
-        showCompletedItems: true,
-        defaultView: 'table',
-        emailNotifications: true,
-        pushNotifications: true,
-        soundEnabled: true,
+        language:             'es',
+        dateFormat:           'DD/MM/YYYY',
+        timeFormat:           '24h',
+        weekStart:            'monday',
+        compactMode:          false,
+        showCompletedItems:   true,
+        defaultView:          'table',
+        emailNotifications:   true,
+        pushNotifications:    true,
+        soundEnabled:         true,
       },
 
-      // Current user
-      updateCurrentUser: (updates) => {
-        set((s) => {
-          const updated = { ...s.currentUser, ...updates };
-          return {
-            currentUser: updated,
-            teamMembers: s.teamMembers.map((m) => (m.id === updated.id ? updated : m)),
-          };
-        });
+      // Sincronizar el usuario actual desde el perfil de Supabase
+      syncFromProfile: (profile) => {
+        if (!profile) return
+        set({
+          currentUser: {
+            id:        profile.id,
+            name:      profile.full_name || 'Usuario',
+            email:     profile.email || '',
+            role:      profile.role  || 'member',
+            avatar:    profile.avatar_url || null,
+            color:     profile.color      || '#579bfc',
+          },
+        })
       },
 
-      // Team members
-      addMember: (data) => {
-        const member = {
-          id: generateId('user'),
-          name: data.name || 'Nuevo miembro',
-          email: data.email || '',
-          role: data.role || 'member',
-          avatar: null,
-          color: data.color || '#579bfc',
-          joinedAt: new Date().toISOString(),
-        };
-        set((s) => ({ teamMembers: [...s.teamMembers, member] }));
-        return member;
+      // Cargar miembros del workspace desde Supabase
+      fetchTeamMembers: async (workspaceId) => {
+        if (!workspaceId) return
+        const { data, error } = await supabase
+          .from('workspace_members')
+          .select('role, profiles(*)')
+          .eq('workspace_id', workspaceId)
+
+        if (error || !data) return
+
+        const members = data.map((row) => ({
+          id:     row.profiles.id,
+          name:   row.profiles.full_name  || 'Usuario',
+          email:  row.profiles.email      || '',
+          role:   row.role,
+          avatar: row.profiles.avatar_url || null,
+          color:  row.profiles.color      || '#579bfc',
+        }))
+        set({ teamMembers: members })
       },
 
-      updateMember: (memberId, updates) => {
-        set((s) => ({
-          teamMembers: s.teamMembers.map((m) => (m.id === memberId ? { ...m, ...updates } : m)),
-        }));
+      // Invitar miembro al workspace
+      inviteMember: async (workspaceId, email, role = 'member') => {
+        // Buscar el perfil por email
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .single()
+
+        if (!profile) return { error: 'Usuario no encontrado. Debe registrarse primero.' }
+
+        const { error } = await supabase.from('workspace_members').insert({
+          workspace_id: workspaceId,
+          user_id:      profile.id,
+          role,
+        })
+        if (error) return { error: error.message }
+
+        await get().fetchTeamMembers(workspaceId)
+        return { success: true }
       },
 
-      removeMember: (memberId) => {
-        const { currentUser } = get();
-        if (memberId === currentUser.id) return;
-        set((s) => ({ teamMembers: s.teamMembers.filter((m) => m.id !== memberId) }));
+      removeMember: async (workspaceId, userId) => {
+        const { currentUser } = get()
+        if (userId === currentUser?.id) return
+        await supabase.from('workspace_members')
+          .delete()
+          .eq('workspace_id', workspaceId)
+          .eq('user_id', userId)
+        set((s) => ({ teamMembers: s.teamMembers.filter((m) => m.id !== userId) }))
       },
 
-      // Preferences
+      updateCurrentUser: async (updates) => {
+        const { currentUser } = get()
+        if (!currentUser) return
+        set((s) => ({ currentUser: { ...s.currentUser, ...updates } }))
+
+        // Persistir en Supabase
+        const dbUpdates = {}
+        if (updates.name   !== undefined) dbUpdates.full_name  = updates.name
+        if (updates.avatar !== undefined) dbUpdates.avatar_url = updates.avatar
+        if (updates.color  !== undefined) dbUpdates.color      = updates.color
+        if (Object.keys(dbUpdates).length > 0) {
+          await supabase.from('profiles').update(dbUpdates).eq('id', currentUser.id)
+        }
+      },
+
       updatePreference: (key, value) => {
-        set((s) => ({ preferences: { ...s.preferences, [key]: value } }));
+        set((s) => ({ preferences: { ...s.preferences, [key]: value } }))
       },
 
       resetPreferences: () => {
         set({
           preferences: {
-            language: 'es',
-            dateFormat: 'DD/MM/YYYY',
-            timeFormat: '24h',
-            weekStart: 'monday',
-            compactMode: false,
+            language:           'es',
+            dateFormat:         'DD/MM/YYYY',
+            timeFormat:         '24h',
+            weekStart:          'monday',
+            compactMode:        false,
             showCompletedItems: true,
-            defaultView: 'table',
+            defaultView:        'table',
             emailNotifications: true,
-            pushNotifications: true,
-            soundEnabled: true,
+            pushNotifications:  true,
+            soundEnabled:       true,
           },
-        });
+        })
       },
     }),
     {
       name: 'workos-user',
-      version: 1,
+      version: 2,
+      // Solo persistir preferencias; usuario y miembros vienen de Supabase
+      partialize: (state) => ({ preferences: state.preferences }),
     }
   )
-);
+)
 
-export default useUserStore;
+export default useUserStore

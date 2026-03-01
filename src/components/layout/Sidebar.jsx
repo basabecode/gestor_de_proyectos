@@ -17,11 +17,15 @@ import {
   Edit3,
   Copy,
   BarChart3,
+  Briefcase,
+  LogOut,
 } from 'lucide-react';
 import useBoardStore from '../../stores/boardStore';
 import useWorkspaceStore from '../../stores/workspaceStore';
 import useUIStore from '../../stores/uiStore';
 import useNotificationStore from '../../stores/notificationStore';
+import useAuthStore from '../../stores/authStore';
+import { Guard } from '../auth/Guard';
 import { cn } from '../../lib/utils';
 
 export default function Sidebar({ onNavigate }) {
@@ -36,17 +40,24 @@ export default function Sidebar({ onNavigate }) {
   const { boards, deleteBoard, duplicateBoard } = useBoardStore();
   const { activeWorkspaceId } = useWorkspaceStore();
   const { getUnreadCount } = useNotificationStore();
+  const { profile, signOut } = useAuthStore();
   const [boardMenu, setBoardMenu] = useState(null);
   const [hoveredBoard, setHoveredBoard] = useState(null);
   const unreadCount = getUnreadCount();
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
+
   const workspaceBoards = boards.filter((b) => b.workspaceId === activeWorkspaceId);
 
   const mainNav = [
-    { id: 'home', icon: Home, label: 'Inicio', path: '/' },
-    { id: 'boards', icon: LayoutGrid, label: 'Tableros', path: '/boards' },
-    { id: 'dashboard', icon: BarChart3, label: 'Dashboard', path: '/dashboard' },
-    { id: 'inbox', icon: Inbox, label: 'Bandeja', path: '/inbox' },
+    { id: 'home',       icon: Home,       label: 'Inicio',       path: '/' },
+    { id: 'boards',     icon: LayoutGrid, label: 'Tableros',     path: '/boards' },
+    { id: 'portfolios', icon: Briefcase,  label: 'Portafolios',  path: '/portfolios' },
+    { id: 'dashboard',  icon: BarChart3,  label: 'Dashboard',    path: '/dashboard' },
+    { id: 'inbox',      icon: Inbox,      label: 'Bandeja',      path: '/inbox' },
   ];
 
   return (
@@ -113,13 +124,15 @@ export default function Sidebar({ onNavigate }) {
             <span className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-text/60">
               Tableros
             </span>
-            <button
-              onClick={() => openModal('createBoard')}
-              className="p-1 hover:bg-sidebar-hover rounded transition-colors"
-              title="Nuevo tablero"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
+            <Guard action="create:board">
+              <button
+                onClick={() => openModal('createBoard')}
+                className="p-1 hover:bg-sidebar-hover rounded transition-colors"
+                title="Nuevo tablero"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </Guard>
           </div>
 
           <div className="space-y-0.5 mt-1">
@@ -156,25 +169,31 @@ export default function Sidebar({ onNavigate }) {
 
                   {boardMenu === board.id && (
                     <div className="absolute left-full top-0 ml-1 w-40 bg-white rounded-lg shadow-lg border border-border-light py-1 z-50 text-text-primary">
-                      <button
-                        onClick={() => { openModal('editBoard', board); setBoardMenu(null); }}
-                        className="w-full px-3 py-2 text-left text-[13px] hover:bg-surface-secondary flex items-center gap-2"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" /> Editar
-                      </button>
-                      <button
-                        onClick={() => { duplicateBoard(board.id); setBoardMenu(null); }}
-                        className="w-full px-3 py-2 text-left text-[13px] hover:bg-surface-secondary flex items-center gap-2"
-                      >
-                        <Copy className="w-3.5 h-3.5" /> Duplicar
-                      </button>
-                      <hr className="my-1 border-border-light" />
-                      <button
-                        onClick={() => { deleteBoard(board.id); setBoardMenu(null); }}
-                        className="w-full px-3 py-2 text-left text-[13px] text-status-red hover:bg-status-red-light flex items-center gap-2"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Eliminar
-                      </button>
+                      <Guard action="edit:board">
+                        <button
+                          onClick={() => { openModal('editBoard', board); setBoardMenu(null); }}
+                          className="w-full px-3 py-2 text-left text-[13px] hover:bg-surface-secondary flex items-center gap-2"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" /> Editar
+                        </button>
+                      </Guard>
+                      <Guard action="create:board">
+                        <button
+                          onClick={() => { duplicateBoard(board.id); setBoardMenu(null); }}
+                          className="w-full px-3 py-2 text-left text-[13px] hover:bg-surface-secondary flex items-center gap-2"
+                        >
+                          <Copy className="w-3.5 h-3.5" /> Duplicar
+                        </button>
+                      </Guard>
+                      <Guard action="delete:board">
+                        <hr className="my-1 border-border-light" />
+                        <button
+                          onClick={() => { deleteBoard(board.id); setBoardMenu(null); }}
+                          className="w-full px-3 py-2 text-left text-[13px] text-status-red hover:bg-status-red-light flex items-center gap-2"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                        </button>
+                      </Guard>
                     </div>
                   )}
                 </div>
@@ -189,7 +208,7 @@ export default function Sidebar({ onNavigate }) {
       )}
 
       {/* Bottom */}
-      <div className="px-2 py-3 border-t border-white/10">
+      <div className="px-2 py-3 border-t border-white/10 space-y-0.5">
         <button
           onClick={() => handleNavigate('/settings')}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] text-sidebar-text hover:bg-sidebar-hover transition-colors"
@@ -198,6 +217,38 @@ export default function Sidebar({ onNavigate }) {
           <Settings className="w-[18px] h-[18px] shrink-0" />
           {!sidebarCollapsed && 'Configuración'}
         </button>
+
+        {/* Usuario + Logout */}
+        {!sidebarCollapsed && (
+          <div className="flex items-center gap-2 px-3 py-2">
+            <div
+              className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0 shadow-xs"
+              style={{ backgroundColor: profile?.color || '#00c875' }}
+            >
+              {(profile?.full_name || 'U').charAt(0).toUpperCase()}
+            </div>
+            <span className="text-[12px] font-medium text-sidebar-text/90 truncate flex-1">
+              {profile?.full_name || 'Usuario'}
+            </span>
+            <button
+              onClick={handleSignOut}
+              title="Cerrar sesión"
+              className="p-1.5 hover:bg-status-red/10 rounded-md transition-colors text-sidebar-text/60 hover:text-status-red"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {sidebarCollapsed && (
+          <button
+            onClick={handleSignOut}
+            title="Cerrar sesión"
+            className="w-full flex items-center justify-center px-3 py-2 rounded-md text-sidebar-text/60 hover:bg-sidebar-hover hover:text-sidebar-text transition-colors"
+          >
+            <LogOut className="w-[18px] h-[18px]" />
+          </button>
+        )}
       </div>
     </aside>
   );

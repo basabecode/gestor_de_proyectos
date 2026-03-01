@@ -169,7 +169,7 @@ export default function CreateBoardModal() {
     setStep('form');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) { setError('El nombre es requerido'); return; }
     if (name.trim().length < 2) { setError('Mínimo 2 caracteres'); return; }
@@ -180,17 +180,17 @@ export default function CreateBoardModal() {
     } else {
       const data = { name: name.trim(), description: description.trim() };
       if (selectedTemplate?.columns) data.columns = selectedTemplate.columns;
-      if (selectedTemplate?.groups) {
-        data.customGroups = selectedTemplate.groups;
+      if (selectedTemplate?.groups) data.customGroups = selectedTemplate.groups;
+      const board = await createBoardWithTemplate(data);
+      if (board?.id) {
+        resetAndClose();
+        navigate(`/board/${board.id}`);
       }
-      const board = createBoardWithTemplate(data);
-      resetAndClose();
-      navigate(`/board/${board.id}`);
     }
   };
 
-  const createBoardWithTemplate = (data) => {
-    const board = createBoard({
+  const createBoardWithTemplate = async (data) => {
+    const board = await createBoard({
       name: data.name,
       description: data.description,
       columns: data.columns,
@@ -203,7 +203,7 @@ export default function CreateBoardModal() {
         color: g.color,
         collapsed: false,
       }));
-      updateBoard(board.id, { groups });
+      await updateBoard(board.id, { groups });
     }
     return board;
   };
@@ -213,7 +213,7 @@ export default function CreateBoardModal() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       try {
         const text = ev.target.result;
         const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
@@ -223,9 +223,10 @@ export default function CreateBoardModal() {
         const rows = lines.slice(1).map(parseCSVLine);
 
         const boardName = file.name.replace(/\.csv$/i, '');
-        const board = createBoard({ name: boardName });
+        const board = await createBoard({ name: boardName });
+        if (!board?.id) { toast.error('Error al crear el tablero'); return; }
 
-        const group = board.groups[0];
+        const group = (board.groups ?? [])[0];
         const store = useBoardStore.getState();
 
         rows.forEach((row) => {
