@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -15,6 +15,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Plus, GripVertical, Settings2, Check, X } from 'lucide-react';
 import useBoardStore from '../../../stores/boardStore';
+import useRiskStore, { riskScore, riskLevel, RISK_LEVEL_COLORS } from '../../../stores/riskStore';
 import { Avatar } from '../../ui';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_COLORS, PRIORITY_LABELS } from '../../../lib/constants';
 import { cn, formatDate, getDateSemaphore } from '../../../lib/utils';
@@ -107,7 +108,7 @@ function WipLimitEditor({ status, currentLimit, onSave, onClose }) {
 
 // ── Kanban Card ───────────────────────────────────────────────────────────────
 
-function KanbanCard({ item, board, loadMap }) {
+function KanbanCard({ item, board, loadMap, lensColor }) {
   const {
     attributes, listeners, setNodeRef, transform, transition, isDragging: isSortDragging,
   } = useSortable({ id: item.id });
@@ -116,6 +117,7 @@ function KanbanCard({ item, board, loadMap }) {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isSortDragging ? 0.4 : 1,
+    ...(lensColor ? { borderLeftColor: lensColor, borderLeftWidth: 3 } : {}),
   };
 
   const priority    = item.columnValues?.priority;
@@ -187,7 +189,7 @@ function KanbanCard({ item, board, loadMap }) {
 
 // ── Kanban Column ─────────────────────────────────────────────────────────────
 
-function KanbanColumn({ status, items, board, color, label, wipLimit, onAddItem, onUpdateWipLimit, loadMap }) {
+function KanbanColumn({ status, items, board, color, label, wipLimit, onAddItem, onUpdateWipLimit, loadMap, lensMap }) {
   const [showAdd,      setShowAdd]      = useState(false);
   const [newTitle,     setNewTitle]     = useState('');
   const [showWipEdit,  setShowWipEdit]  = useState(false);
@@ -256,7 +258,7 @@ function KanbanColumn({ status, items, board, color, label, wipLimit, onAddItem,
       <div className="flex-1 overflow-y-auto space-y-2 px-2 pb-2">
         <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
           {items.map((item) => (
-            <KanbanCard key={item.id} item={item} board={board} loadMap={loadMap} />
+            <KanbanCard key={item.id} item={item} board={board} loadMap={loadMap} lensColor={lensMap[item.id]} />
           ))}
         </SortableContext>
 
@@ -305,8 +307,9 @@ function KanbanColumn({ status, items, board, color, label, wipLimit, onAddItem,
 
 // ── KanbanView (main) ─────────────────────────────────────────────────────────
 
-export default function KanbanView({ board }) {
+export default function KanbanView({ board, activeLens = 'none' }) {
   const { updateItemColumn, addItem, updateWipLimit } = useBoardStore();
+  const { risks } = useRiskStore();
   const [activeId, setActiveId] = useState(null);
 
   const sensors = useSensors(
@@ -315,6 +318,50 @@ export default function KanbanView({ board }) {
 
   const statuses = Object.keys(STATUS_LABELS);
   const wipLimits = board.wipLimits || {};
+
+  // Compute kanban lens map: itemId → color string
+  const lensMap = useMemo(() => {
+    if (activeLens === 'risk') {
+      const map = {};
+      risks
+        .filter((r) => r.board_id === board.id && r.status !== 'closed' && r.item_id)
+        .forEach((r) => {
+          const s = riskScore(r);
+          if (!map[r.item_id] || s > map[r.item_id].score) {
+            map[r.item_id] = { color: RISK_LEVEL_COLORS[riskLevel(s)].bg, score: s };
+          }
+        });
+      return Object.fromEntries(Object.entries(map).map(([id, v]) => [id, v.color]));
+    }
+    if (activeLens === 'workload') {
+      const loadCounts = {};
+      (board.items ?? []).forEach((i) => {
+        if (i.columnValues?.status === 'working_on_it' && i.columnValues?.person) {
+          const p = i.columnValues.person;
+          loadCounts[p] = (loadCounts[p] || 0) + 1;
+        }
+      });
+      const map = {};
+      (board.items ?? []).forEach((i) => {
+        const person = i.columnValues?.person;
+        if (person) {
+          const count = loadCounts[person] || 0;
+          map[i.id] = count >= 6 ? '#e2445c' : count >= 3 ? '#fdab3d' : '#00c875';
+        }
+      });
+      return map;
+    }
+    if (activeLens === 'date') {
+      const semColors = { overdue: '#e2445c', warning: '#fdab3d', ok: '#00c875' };
+      const map = {};
+      (board.items ?? []).forEach((i) => {
+        const sem = getDateSemaphore(i.columnValues?.date);
+        if (semColors[sem]) map[i.id] = semColors[sem];
+      });
+      return map;
+    }
+    return {};
+  }, [activeLens, risks, board.id, board.items]);
 
   const itemsByStatus = {};
   statuses.forEach((status) => {
@@ -386,6 +433,7 @@ export default function KanbanView({ board }) {
               onAddItem={handleAddItem}
               onUpdateWipLimit={(s, limit) => updateWipLimit(board.id, s, limit)}
               loadMap={loadMap}
+              lensMap={lensMap}
             />
           ))}
         </div>

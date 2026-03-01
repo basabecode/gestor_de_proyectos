@@ -33,7 +33,7 @@ const cellComponents = {
   [COLUMN_TYPES.TAG]: TagCell,
 };
 
-export default function BoardRow({ board, item, columns, groupColor, sortable, riskScore: itemRiskScore }) {
+export default function BoardRow({ board, item, columns, groupColor, sortable, lensColor, riskScore: itemRiskScore }) {
   const { updateItem, updateItemColumn, deleteItem } = useBoardStore();
   const { executeAutomations } = useAutomationStore();
   const { addNotification } = useNotificationStore();
@@ -126,7 +126,7 @@ export default function BoardRow({ board, item, columns, groupColor, sortable, r
       style={style}
       className="flex items-center border-b border-border-light board-row group/row min-w-fit"
     >
-      <div className="group-indicator" style={{ backgroundColor: groupColor }} />
+      <div className="group-indicator" style={{ backgroundColor: lensColor ?? groupColor }} />
 
       {/* Drag handle + Checkbox */}
       <div className="w-8 px-1 py-2.5 flex items-center justify-center cell-border gap-0.5">

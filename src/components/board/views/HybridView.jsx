@@ -9,7 +9,7 @@ import { GanttChart, Columns3, GripVertical } from 'lucide-react';
 import GanttView  from './GanttView';
 import KanbanView from './KanbanView';
 
-export default function HybridView({ board }) {
+export default function HybridView({ board, activeLens = 'none' }) {
   // splitPct: porcentaje del ancho dedicado al Gantt (30–70%)
   const [splitPct, setSplitPct] = useState(50);
   const containerRef = useRef(null);
@@ -70,7 +70,7 @@ export default function HybridView({ board }) {
           <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wide">Kanban</span>
         </div>
         <div className="flex-1 overflow-hidden flex flex-col">
-          <KanbanView board={board} />
+          <KanbanView board={board} activeLens={activeLens} />
         </div>
       </div>
     </div>

@@ -7,10 +7,12 @@ import {
   SortDesc,
   Users,
   Eye,
+  EyeOff,
   X,
   LayoutGrid,
   Columns3,
   Calendar,
+  CalendarDays,
   Download,
   Upload,
   Clock,
@@ -35,7 +37,15 @@ import PMISPanel from './PMISPanel';
 import RiskPanel from './RiskPanel';
 import HybridView from './views/HybridView';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS } from '../../lib/constants';
+import { getDateSemaphore } from '../../lib/utils';
 import { Guard } from '../auth/Guard';
+
+const LENS_OPTIONS = [
+  { id: 'none',     icon: EyeOff,       label: 'Sin lente',     desc: 'Vista normal'                 },
+  { id: 'risk',     icon: ShieldAlert,  label: 'Lente Riesgo',  desc: 'Color por nivel de riesgo'    },
+  { id: 'workload', icon: Users,        label: 'Lente Carga',   desc: 'Color por carga del asignado' },
+  { id: 'date',     icon: CalendarDays, label: 'Lente Fecha',   desc: 'Color por semáforo de fecha'  },
+];
 
 const VIEW_TABS = [
   { id: 'table',    label: 'Tabla',      icon: LayoutGrid     },
@@ -76,8 +86,9 @@ export default function BoardView({ board }) {
   const [showPMIS, setShowPMIS] = useState(false);
 
   // Risk panel + lens
-  const [showRisk,     setShowRisk]     = useState(false);
-  const [riskLensOn,   setRiskLensOn]   = useState(false);
+  const [showRisk,       setShowRisk]       = useState(false);
+  const [activeLens,     setActiveLens]     = useState('none'); // 'none' | 'risk' | 'workload' | 'date'
+  const [showLensPicker, setShowLensPicker] = useState(false);
   const { risks } = useRiskStore();
 
   // Only one side-panel open at a time
@@ -85,20 +96,55 @@ export default function BoardView({ board }) {
   const openPMIS = () => { setShowPMIS(true);  setShowAI(false);  setShowRisk(false); };
   const openRisk = () => { setShowRisk(true);  setShowAI(false);  setShowPMIS(false); };
 
-  // Risk lens map: itemId → max score (only open risks)
-  const riskLensMap = useMemo(() => {
-    if (!riskLensOn) return {};
-    const map = {};
-    risks
-      .filter((r) => r.board_id === board.id && r.status !== 'closed' && r.item_id)
-      .forEach((r) => {
-        const score = riskScore(r);
-        if (!map[r.item_id] || score > map[r.item_id]) {
-          map[r.item_id] = score;
+  // Lens data map: itemId → { color: string, score?: number }
+  const lensMap = useMemo(() => {
+    if (activeLens === 'none') return {};
+
+    if (activeLens === 'risk') {
+      const map = {};
+      risks
+        .filter((r) => r.board_id === board.id && r.status !== 'closed' && r.item_id)
+        .forEach((r) => {
+          const s = riskScore(r);
+          if (!map[r.item_id] || s > (map[r.item_id].score || 0)) {
+            map[r.item_id] = { color: RISK_LEVEL_COLORS[riskLevel(s)].bg, score: s };
+          }
+        });
+      return map;
+    }
+
+    if (activeLens === 'workload') {
+      const loadCounts = {};
+      (board.items ?? []).forEach((i) => {
+        if (i.columnValues?.status === 'working_on_it' && i.columnValues?.person) {
+          const p = i.columnValues.person;
+          loadCounts[p] = (loadCounts[p] || 0) + 1;
         }
       });
-    return map;
-  }, [riskLensOn, risks, board.id]);
+      const map = {};
+      (board.items ?? []).forEach((i) => {
+        const person = i.columnValues?.person;
+        if (person) {
+          const count = loadCounts[person] || 0;
+          const color = count >= 6 ? '#e2445c' : count >= 3 ? '#fdab3d' : '#00c875';
+          map[i.id] = { color };
+        }
+      });
+      return map;
+    }
+
+    if (activeLens === 'date') {
+      const semColors = { overdue: '#e2445c', warning: '#fdab3d', ok: '#00c875' };
+      const map = {};
+      (board.items ?? []).forEach((i) => {
+        const sem = getDateSemaphore(i.columnValues?.date);
+        if (semColors[sem]) map[i.id] = { color: semColors[sem] };
+      });
+      return map;
+    }
+
+    return {};
+  }, [activeLens, risks, board.id, board.items]);
 
   // Unique people in board
   const people = useMemo(() => {
@@ -383,14 +429,44 @@ export default function BoardView({ board }) {
             <ShieldAlert className="w-4 h-4 text-text-secondary" />
           </button>
 
-          {/* Risk Lens toggle */}
-          <button
-            onClick={() => setRiskLensOn(!riskLensOn)}
-            className={`p-1.5 rounded transition-colors text-[10px] font-bold ${riskLensOn ? 'bg-status-red/10 text-status-red ring-1 ring-status-red/30' : 'hover:bg-surface-secondary text-text-secondary'}`}
-            title="Lente de Riesgo"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
+          {/* Lens picker */}
+          <div className="relative">
+            <button
+              onClick={() => setShowLensPicker(!showLensPicker)}
+              className={`p-1.5 rounded transition-colors relative ${activeLens !== 'none' ? 'bg-primary/10 text-primary' : 'hover:bg-surface-secondary text-text-secondary'}`}
+              title="Vistas de Lente"
+            >
+              <Eye className="w-4 h-4" />
+              {activeLens !== 'none' && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-primary" />
+              )}
+            </button>
+            {showLensPicker && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowLensPicker(false)} />
+                <div className="absolute right-0 mt-1 w-52 bg-white rounded-lg shadow-lg border border-border-light py-1 z-20 animate-slide-down">
+                  <p className="px-3 py-1.5 text-[10px] font-semibold text-text-disabled uppercase tracking-wider">Vista de Lente</p>
+                  {LENS_OPTIONS.map((opt) => {
+                    const Icon = opt.icon;
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => { setActiveLens(opt.id); setShowLensPicker(false); }}
+                        className={`w-full px-3 py-2 text-left text-[12px] flex items-center gap-2.5 hover:bg-surface-secondary ${activeLens === opt.id ? 'bg-primary/5 text-primary' : 'text-text-primary'}`}
+                      >
+                        <Icon className="w-3.5 h-3.5 shrink-0" />
+                        <div className="flex-1">
+                          <div className="font-medium leading-tight">{opt.label}</div>
+                          <div className="text-[10px] text-text-disabled leading-tight">{opt.desc}</div>
+                        </div>
+                        {activeLens === opt.id && <span className="text-primary text-[10px] font-bold">✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
 
           {/* AI Assistant */}
           <button
@@ -431,6 +507,24 @@ export default function BoardView({ board }) {
         </div>
       )}
 
+      {/* Active lens bar */}
+      {activeLens !== 'none' && (
+        <div className="bg-surface-secondary border-b border-border-light px-4 py-1.5 flex items-center gap-2">
+          <Eye className="w-3.5 h-3.5 text-text-secondary" />
+          <span className="text-[11px] text-text-secondary">Lente activa:</span>
+          <span className="text-[11px] font-semibold text-primary">
+            {LENS_OPTIONS.find((o) => o.id === activeLens)?.label}
+          </span>
+          <button
+            onClick={() => setActiveLens('none')}
+            className="ml-auto flex items-center gap-1 text-[11px] text-text-disabled hover:text-status-red transition-colors"
+          >
+            <X className="w-3 h-3" />
+            Quitar lente
+          </button>
+        </div>
+      )}
+
       {/* View content */}
       {activeView === 'table' && (
         <div className="flex-1 overflow-auto p-4">
@@ -441,7 +535,7 @@ export default function BoardView({ board }) {
               group={group}
               items={filteredItems.filter((i) => i.groupId === group.id)}
               columns={board.columns ?? []}
-              riskLensMap={riskLensMap}
+              lensMap={lensMap}
             />
           ))}
           <Guard action="create:board">
@@ -456,11 +550,11 @@ export default function BoardView({ board }) {
         </div>
       )}
 
-      {activeView === 'kanban'   && <KanbanView   board={filteredBoard} />}
+      {activeView === 'kanban'   && <KanbanView   board={filteredBoard} activeLens={activeLens} />}
       {activeView === 'calendar' && <CalendarView  board={filteredBoard} />}
       {activeView === 'timeline' && <TimelineView  board={filteredBoard} />}
       {activeView === 'gantt'    && <GanttView     board={filteredBoard} />}
-      {activeView === 'hybrid'   && <HybridView    board={filteredBoard} />}
+      {activeView === 'hybrid'   && <HybridView    board={filteredBoard} activeLens={activeLens} />}
 
       {/* Automations panel */}
       {showAutomations && (
