@@ -19,6 +19,7 @@ import {
   Bot,
   BarChart2,
   ShieldAlert,
+  PanelLeftClose,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useBoardStore from '../../stores/boardStore';
@@ -32,15 +33,17 @@ import AutomationsPanel from './AutomationsPanel';
 import AIAssistantPanel from './AIAssistantPanel';
 import PMISPanel from './PMISPanel';
 import RiskPanel from './RiskPanel';
+import HybridView from './views/HybridView';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS } from '../../lib/constants';
 import { Guard } from '../auth/Guard';
 
 const VIEW_TABS = [
-  { id: 'table', label: 'Tabla', icon: LayoutGrid },
-  { id: 'kanban', label: 'Kanban', icon: Columns3 },
-  { id: 'calendar', label: 'Calendario', icon: Calendar },
-  { id: 'timeline', label: 'Timeline', icon: Clock },
-  { id: 'gantt', label: 'Gantt', icon: GanttChart },
+  { id: 'table',    label: 'Tabla',      icon: LayoutGrid     },
+  { id: 'kanban',   label: 'Kanban',     icon: Columns3       },
+  { id: 'calendar', label: 'Calendario', icon: Calendar       },
+  { id: 'timeline', label: 'Timeline',   icon: Clock          },
+  { id: 'gantt',    label: 'Gantt',      icon: GanttChart     },
+  { id: 'hybrid',   label: 'Híbrido',    icon: PanelLeftClose },
 ];
 
 export default function BoardView({ board }) {
@@ -453,10 +456,11 @@ export default function BoardView({ board }) {
         </div>
       )}
 
-      {activeView === 'kanban' && <KanbanView board={filteredBoard} />}
-      {activeView === 'calendar' && <CalendarView board={filteredBoard} />}
-      {activeView === 'timeline' && <TimelineView board={filteredBoard} />}
-      {activeView === 'gantt' && <GanttView board={filteredBoard} />}
+      {activeView === 'kanban'   && <KanbanView   board={filteredBoard} />}
+      {activeView === 'calendar' && <CalendarView  board={filteredBoard} />}
+      {activeView === 'timeline' && <TimelineView  board={filteredBoard} />}
+      {activeView === 'gantt'    && <GanttView     board={filteredBoard} />}
+      {activeView === 'hybrid'   && <HybridView    board={filteredBoard} />}
 
       {/* Automations panel */}
       {showAutomations && (

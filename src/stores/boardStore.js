@@ -20,6 +20,7 @@ export function rowToBoard(board, groups = [], items = []) {
     plannedEnd:   board.planned_end   || null,
     portfolioId:  board.portfolio_id  || null,
     programId:    board.program_id    || null,
+    wipLimits:    board.wip_limits    || {},
     createdAt:    board.created_at,
     updatedAt:    board.updated_at,
     groups: groups
@@ -134,6 +135,29 @@ const useBoardStore = create((set, get) => ({
 
     if (Object.keys(dbUpdates).length > 0) {
       await supabase.from('boards').update(dbUpdates).eq('id', boardId)
+    }
+  },
+
+  // ── WIP Limits ───────────────────────────────────────────────────────────────
+
+  updateWipLimit: async (boardId, status, limit) => {
+    // Merge the new limit into the existing wipLimits map
+    set((s) => ({
+      boards: s.boards.map((b) => {
+        if (b.id !== boardId) return b
+        const newLimits = { ...b.wipLimits, [status]: limit }
+        if (limit === 0) delete newLimits[status]   // 0 = remove limit
+        return { ...b, wipLimits: newLimits }
+      }),
+      activeBoard: s.activeBoard?.id === boardId
+        ? { ...s.activeBoard, wipLimits: { ...s.activeBoard.wipLimits, [status]: limit } }
+        : s.activeBoard,
+    }))
+
+    // Build updated wipLimits from current state and persist
+    const board = get().boards.find((b) => b.id === boardId)
+    if (board) {
+      await supabase.from('boards').update({ wip_limits: board.wipLimits }).eq('id', boardId)
     }
   },
 
