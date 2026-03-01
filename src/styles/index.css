@@ -1,0 +1,235 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand colors (preserved from original) */
+  --color-shatter-primary: #181B34;
+  --color-shatter-accent: #6161FF;
+
+  /* Monday.com inspired Work OS palette */
+  --color-primary: #0073ea;
+  --color-primary-hover: #0060b9;
+  --color-primary-light: #cce5ff;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f6f7fb;
+  --color-surface-hover: #dcdfec;
+  --color-border: #d0d4e4;
+  --color-border-light: #e6e9ef;
+  --color-text-primary: #323338;
+  --color-text-secondary: #676879;
+  --color-text-disabled: #c3c6d4;
+
+  /* Status colors */
+  --color-status-green: #00c875;
+  --color-status-green-light: #d4f5e5;
+  --color-status-yellow: #fdab3d;
+  --color-status-yellow-light: #fff3d6;
+  --color-status-red: #e2445c;
+  --color-status-red-light: #fce4e8;
+  --color-status-blue: #579bfc;
+  --color-status-blue-light: #d6e4ff;
+  --color-status-purple: #a25ddc;
+  --color-status-purple-light: #eedcf5;
+  --color-status-orange: #ff642e;
+  --color-status-orange-light: #ffe0d6;
+  --color-status-grey: #c4c4c4;
+  --color-status-grey-light: #f0f0f0;
+
+  /* Group colors */
+  --color-group-blue: #579bfc;
+  --color-group-green: #00c875;
+  --color-group-red: #e2445c;
+  --color-group-purple: #a25ddc;
+  --color-group-orange: #ff642e;
+  --color-group-yellow: #fdab3d;
+
+  /* Sidebar */
+  --color-sidebar-bg: #292f4c;
+  --color-sidebar-hover: #3c4260;
+  --color-sidebar-active: #0073ea;
+  --color-sidebar-text: #d5d8df;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-dialog: 0 8px 32px rgba(0, 0, 0, 0.16);
+}
+
+/* Base styles */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+  font-size: 0.875rem;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c3c6d4;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a5a8b6;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slide-left {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-fade-in { animation: fade-in 0.2s ease-out; }
+.animate-slide-up { animation: slide-up 0.25s ease-out; }
+.animate-slide-down { animation: slide-down 0.25s ease-out; }
+.animate-slide-left { animation: slide-left 0.25s ease-out; }
+.animate-scale-in { animation: scale-in 0.2s ease-out; }
+.animate-in { animation: scale-in 0.2s ease-out; }
+.animate-spin { animation: spin 1s linear infinite; }
+
+/* Monday.com table styles */
+.board-row:hover { background: #f5f6f8; }
+.board-row:hover .row-actions { opacity: 1; }
+
+.group-indicator {
+  width: 6px;
+  min-width: 6px;
+  border-radius: 3px 0 0 3px;
+}
+
+.status-badge {
+  padding: 4px 0;
+  border-radius: 2px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-align: center;
+  min-width: 90px;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.status-badge:hover {
+  filter: brightness(0.92);
+}
+
+.cell-border {
+  border-right: 1px solid var(--color-border-light);
+}
+
+.drag-overlay {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  background: white;
+  border-radius: 4px;
+}
+
+/* Settings inputs */
+.settings-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  background: white;
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.settings-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(0, 115, 234, 0.1);
+}
+
+/* ─── Responsive ─── */
+
+/* Mobile sidebar overlay */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 40;
+  animation: fade-in 0.2s ease-out;
+}
+
+.sidebar-mobile {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 50;
+  animation: slide-right 0.25s ease-out;
+}
+
+@keyframes slide-right {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+/* Table horizontal scroll wrapper */
+.board-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  .board-row {
+    min-height: 44px;
+  }
+
+  .status-badge {
+    min-width: 80px;
+    padding: 6px 4px;
+    font-size: 0.625rem;
+  }
+
+  .cell-border {
+    border-right: 1px solid var(--color-border-light);
+  }
+
+  .settings-input {
+    padding: 10px 12px;
+    font-size: 1rem; /* Prevent iOS zoom on focus */
+  }
+}
+
+/* Safe area for notch devices */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
