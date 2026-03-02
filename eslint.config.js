@@ -23,7 +23,15 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // varsIgnorePattern: PascalCase/underscore vars + 'motion' (framer-motion namespace, usado como motion.div en JSX)
+      // destructuredArrayIgnorePattern: componentes React extraídos en .map(([href, Icon, label]) => ...)
+      'no-unused-vars': [
+        'error',
+        {
+          varsIgnorePattern: '^[A-Z_]|^motion$',
+          destructuredArrayIgnorePattern: '^[A-Z_]',
+        },
+      ],
     },
   },
 ])

@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  LayoutGrid, Target, Users, ShoppingCart, Bug, BookOpen,
+  LayoutGrid, Target, Users, ShoppingCart, Bug,
   Rocket, CalendarCheck, Upload, FileSpreadsheet, ChevronLeft,
 } from 'lucide-react';
 import { Modal, Button, Input } from '../ui';
 import useBoardStore from '../../stores/boardStore';
 import useUIStore from '../../stores/uiStore';
+import useWorkspaceStore from '../../stores/workspaceStore';
 import { COLUMN_TYPES } from '../../lib/constants';
-import { cn } from '../../lib/utils';
 import toast from 'react-hot-toast';
 
 const TEMPLATES = [
@@ -28,16 +28,16 @@ const TEMPLATES = [
     icon: Target,
     color: '#00c875',
     columns: [
-      { id: 'status', title: 'Estado', type: COLUMN_TYPES.STATUS, width: 140 },
-      { id: 'person', title: 'Responsable', type: COLUMN_TYPES.PERSON, width: 130 },
-      { id: 'date', title: 'Fecha límite', type: COLUMN_TYPES.DATE, width: 130 },
-      { id: 'priority', title: 'Prioridad', type: COLUMN_TYPES.PRIORITY, width: 130 },
-      { id: 'progress', title: 'Progreso', type: COLUMN_TYPES.RATING, width: 120 },
+      { id: 'status',     title: 'Estado',          type: COLUMN_TYPES.STATUS,     width: 140 },
+      { id: 'person',     title: 'Responsable',      type: COLUMN_TYPES.PERSON,     width: 130 },
+      { id: 'date_range', title: 'Fechas',           type: COLUMN_TYPES.DATE_RANGE, width: 200 },
+      { id: 'priority',   title: 'Prioridad',        type: COLUMN_TYPES.PRIORITY,   width: 130 },
+      { id: 'progress',   title: 'Progreso',         type: COLUMN_TYPES.RATING,     width: 120 },
     ],
     groups: [
-      { title: 'Por hacer', color: '#579bfc' },
+      { title: 'Por hacer',   color: '#579bfc' },
       { title: 'En progreso', color: '#fdab3d' },
-      { title: 'Completado', color: '#00c875' },
+      { title: 'Completado',  color: '#00c875' },
     ],
   },
   {
@@ -47,11 +47,12 @@ const TEMPLATES = [
     icon: Rocket,
     color: '#a25ddc',
     columns: [
-      { id: 'status', title: 'Estado', type: COLUMN_TYPES.STATUS, width: 140 },
-      { id: 'person', title: 'Asignado', type: COLUMN_TYPES.PERSON, width: 130 },
-      { id: 'priority', title: 'Prioridad', type: COLUMN_TYPES.PRIORITY, width: 130 },
-      { id: 'points', title: 'Puntos', type: COLUMN_TYPES.NUMBER, width: 100 },
-      { id: 'sprint_tag', title: 'Sprint', type: COLUMN_TYPES.TAG, width: 130 },
+      { id: 'status',     title: 'Estado',    type: COLUMN_TYPES.STATUS,     width: 140 },
+      { id: 'person',     title: 'Asignado',  type: COLUMN_TYPES.PERSON,     width: 130 },
+      { id: 'date_range', title: 'Fechas',    type: COLUMN_TYPES.DATE_RANGE, width: 200 },
+      { id: 'priority',   title: 'Prioridad', type: COLUMN_TYPES.PRIORITY,   width: 130 },
+      { id: 'points',     title: 'Puntos',    type: COLUMN_TYPES.NUMBER,     width: 100 },
+      { id: 'sprint_tag', title: 'Sprint',    type: COLUMN_TYPES.TAG,        width: 130 },
     ],
     groups: [
       { title: 'Backlog', color: '#c4c4c4' },
@@ -143,7 +144,8 @@ const TEMPLATES = [
 export default function CreateBoardModal() {
   const navigate = useNavigate();
   const { activeModal, modalData, closeModal } = useUIStore();
-  const { createBoard, updateBoard } = useBoardStore();
+  const { createBoard, updateBoard, addGroup, deleteGroup } = useBoardStore();
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
   const isEdit = activeModal === 'editBoard';
   const isOpen = activeModal === 'createBoard' || isEdit;
 
@@ -154,6 +156,18 @@ export default function CreateBoardModal() {
   const [namePlaceholder, setNamePlaceholder] = useState('Ej: Proyecto Marketing Q1');
   const [descPlaceholder, setDescPlaceholder] = useState('Describe el propósito del tablero...');
   const [error, setError] = useState('');
+
+  // Patrón React recomendado: sincronizar estado con props sin useEffect
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [prevIsEditOpen, setPrevIsEditOpen] = useState(false);
+  const currentIsEditOpen = isEdit && isOpen;
+  if (currentIsEditOpen !== prevIsEditOpen) {
+    setPrevIsEditOpen(currentIsEditOpen);
+    if (currentIsEditOpen && modalData) {
+      setName(modalData.name || '');
+      setDescription(modalData.description || '');
+    }
+  }
 
   const resetAndClose = () => {
     closeModal();
@@ -185,7 +199,7 @@ export default function CreateBoardModal() {
       updateBoard(modalData.id, { name: name.trim(), description: description.trim() });
       resetAndClose();
     } else {
-      const data = { name: name.trim(), description: description.trim() };
+      const data = { name: name.trim(), description: description.trim(), workspaceId: activeWorkspaceId };
       if (selectedTemplate?.columns) data.columns = selectedTemplate.columns;
       if (selectedTemplate?.groups) data.customGroups = selectedTemplate.groups;
       const board = await createBoardWithTemplate(data);
@@ -201,27 +215,23 @@ export default function CreateBoardModal() {
       name: data.name,
       description: data.description,
       columns: data.columns,
+      workspaceId: data.workspaceId,
     });
-    // If template has custom groups, replace the default one
-    if (data.customGroups && board) {
-      const groups = data.customGroups.map((g, idx) => ({
-        id: `grp_tpl_${idx}_${Date.now()}`,
-        title: g.title,
-        color: g.color,
-        collapsed: false,
-      }));
-      await updateBoard(board.id, { groups });
+    if (!board) return null;
+
+    // Si la plantilla tiene grupos: eliminar el grupo inicial y crear los de la plantilla en Supabase
+    if (data.customGroups?.length) {
+      // Eliminar el grupo vacío por defecto creado por createBoard
+      if (board.groups?.[0]?.id) {
+        await deleteGroup(board.id, board.groups[0].id);
+      }
+      // Crear cada grupo de la plantilla (persiste en Supabase)
+      for (const g of data.customGroups) {
+        await addGroup(board.id, { title: g.title, color: g.color });
+      }
     }
     return board;
   };
-
-  // Pre-cargar datos al abrir en modo edición
-  useEffect(() => {
-    if (isEdit && isOpen && modalData) {
-      setName(modalData.name || '');
-      setDescription(modalData.description || '');
-    }
-  }, [isEdit, isOpen, modalData]);
 
   const handleCSVImport = (e) => {
     const file = e.target.files?.[0];

@@ -10,6 +10,7 @@ import useNotificationStore from '../../stores/notificationStore';
 import StatusCell from './columns/StatusCell';
 import PersonCell from './columns/PersonCell';
 import DateCell from './columns/DateCell';
+import DateRangeCell from './columns/DateRangeCell';
 import PriorityCell from './columns/PriorityCell';
 import TextCell from './columns/TextCell';
 import NumberCell from './columns/NumberCell';
@@ -24,6 +25,7 @@ const cellComponents = {
   [COLUMN_TYPES.STATUS]: StatusCell,
   [COLUMN_TYPES.PERSON]: PersonCell,
   [COLUMN_TYPES.DATE]: DateCell,
+  [COLUMN_TYPES.DATE_RANGE]: DateRangeCell,
   [COLUMN_TYPES.PRIORITY]: PriorityCell,
   [COLUMN_TYPES.TEXT]: TextCell,
   [COLUMN_TYPES.NUMBER]: NumberCell,

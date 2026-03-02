@@ -42,6 +42,7 @@ export const COLUMN_TYPES = {
   STATUS: 'status',
   PERSON: 'person',
   DATE: 'date',
+  DATE_RANGE: 'date_range',
   NUMBER: 'number',
   TEXT: 'text',
   PRIORITY: 'priority',

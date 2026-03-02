@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Plus, Type, Hash, Calendar, CheckSquare, Star, Link, Tag, Users, ListTodo, Flag } from 'lucide-react';
+import { Plus, Type, Hash, Calendar, CalendarRange, CheckSquare, Star, Link, Tag, Users, ListTodo, Flag } from 'lucide-react';
 import useBoardStore from '../../stores/boardStore';
 import { COLUMN_TYPES } from '../../lib/constants';
 
 const COLUMN_OPTIONS = [
   { type: COLUMN_TYPES.STATUS, label: 'Estado', icon: ListTodo },
   { type: COLUMN_TYPES.PERSON, label: 'Persona', icon: Users },
-  { type: COLUMN_TYPES.DATE, label: 'Fecha', icon: Calendar },
+  { type: COLUMN_TYPES.DATE, label: 'Fecha límite', icon: Calendar },
+  { type: COLUMN_TYPES.DATE_RANGE, label: 'Rango de fechas', icon: CalendarRange },
   { type: COLUMN_TYPES.PRIORITY, label: 'Prioridad', icon: Flag },
   { type: COLUMN_TYPES.TEXT, label: 'Texto', icon: Type },
   { type: COLUMN_TYPES.NUMBER, label: 'Número', icon: Hash },
@@ -24,7 +25,7 @@ export default function AddColumnButton({ boardId }) {
     addColumn(boardId, {
       title: option.label,
       type: option.type,
-      width: option.type === COLUMN_TYPES.TAG ? 180 : 130,
+      width: option.type === COLUMN_TYPES.TAG ? 180 : option.type === COLUMN_TYPES.DATE_RANGE ? 200 : 130,
     });
     setOpen(false);
   };
