@@ -204,7 +204,20 @@ function executeAction(action, context, boardStore) {
       return null;
     }
     case ACTION_TYPES.NOTIFY: {
-      return { message: action.config.message || 'Notificación enviada', notify: true };
+      const msg = action.config.message || 'Notificación de automatización';
+      // Insertar notificación persistente de forma asíncrona
+      import('./notificationStore').then(({ default: useNotificationStore }) => {
+        useNotificationStore.getState().addNotification({
+          type:      'automation',
+          title:     'Automatización',
+          message:   msg,
+          boardId,
+          itemId,
+          itemTitle: context.itemTitle || null,
+          author:    'Automatización',
+        });
+      }).catch(() => {});
+      return { message: msg, notify: true };
     }
     case ACTION_TYPES.SET_DATE: {
       if (action.config.daysFromNow !== undefined) {

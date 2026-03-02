@@ -23,12 +23,14 @@ import {
   Volume2,
   Mail,
   LayoutGrid,
+  AlertTriangle,
 } from 'lucide-react';
 import TopBar from '../components/layout/TopBar';
 import { Button } from '../components/ui';
 import useUserStore from '../stores/userStore';
 import useUIStore from '../stores/uiStore';
 import useWorkspaceStore from '../stores/workspaceStore';
+import { useWebPush } from '../hooks/useWebPush';
 import { cn, getInitials } from '../lib/utils';
 import toast from 'react-hot-toast';
 
@@ -430,6 +432,37 @@ function PreferencesSection() {
 /* ─── Notifications ─── */
 function NotificationsSection() {
   const { preferences, updatePreference } = useUserStore();
+  const { isSupported, permission, requestPermission, showBrowserNotification } = useWebPush();
+
+  const handlePushToggle = async (enabled) => {
+    if (enabled) {
+      if (!isSupported) {
+        toast.error('Tu navegador no soporta notificaciones push');
+        return;
+      }
+      if (permission === 'denied') {
+        toast.error('Permiso bloqueado. Habilítalo en la configuración de tu navegador.');
+        return;
+      }
+      const result = await requestPermission();
+      if (result === 'granted') {
+        toast.success('Notificaciones push activadas');
+        showBrowserNotification('Work OS', { body: 'Las notificaciones push están activadas.' });
+      } else {
+        toast.error('Permiso denegado por el navegador');
+      }
+    } else {
+      updatePreference('pushNotifications', false);
+      toast('Notificaciones push desactivadas', { icon: '🔕' });
+    }
+  };
+
+  const permissionLabel = {
+    granted:     { text: 'Permitido',  cls: 'text-status-green' },
+    denied:      { text: 'Bloqueado',  cls: 'text-status-red' },
+    default:     { text: 'Sin definir', cls: 'text-text-secondary' },
+    unsupported: { text: 'No soportado', cls: 'text-text-disabled' },
+  }[permission] || { text: permission, cls: 'text-text-secondary' };
 
   return (
     <div>
@@ -444,12 +477,37 @@ function NotificationsSection() {
           />
         </SettingRow>
 
-        <SettingRow icon={Bell} label="Notificaciones push" description="Notificaciones en el navegador">
-          <ToggleSwitch
-            checked={preferences.pushNotifications}
-            onChange={(v) => updatePreference('pushNotifications', v)}
-          />
-        </SettingRow>
+        <div>
+          <SettingRow
+            icon={Bell}
+            label="Notificaciones push"
+            description={
+              <span className="flex items-center gap-1">
+                Notificaciones en el navegador
+                <span className={cn('text-[10px] font-medium', permissionLabel.cls)}>
+                  — {permissionLabel.text}
+                </span>
+              </span>
+            }
+          >
+            <ToggleSwitch
+              checked={preferences.pushNotifications && permission === 'granted'}
+              onChange={handlePushToggle}
+              disabled={!isSupported}
+            />
+          </SettingRow>
+
+          {permission === 'denied' && (
+            <div className="mt-2 ml-10 flex items-start gap-2 p-3 bg-status-red-light rounded-lg">
+              <AlertTriangle className="w-4 h-4 text-status-red shrink-0 mt-0.5" />
+              <p className="text-[12px] text-status-red">
+                El permiso está bloqueado en el navegador. Para habilitarlo, ve a la configuración
+                del sitio en tu navegador y cambia el permiso de <strong>Notificaciones</strong> a
+                &ldquo;Permitir&rdquo;.
+              </p>
+            </div>
+          )}
+        </div>
 
         <SettingRow icon={Volume2} label="Sonidos" description="Reproduce sonidos en las notificaciones">
           <ToggleSwitch
@@ -593,13 +651,15 @@ function SettingRow({ icon: Icon, label, description, children }) {
   );
 }
 
-function ToggleSwitch({ checked, onChange }) {
+function ToggleSwitch({ checked, onChange, disabled = false }) {
   return (
     <button
-      onClick={() => onChange(!checked)}
+      onClick={() => !disabled && onChange(!checked)}
+      disabled={disabled}
       className={cn(
         'w-10 h-[22px] rounded-full transition-colors relative',
-        checked ? 'bg-primary' : 'bg-gray-300'
+        checked ? 'bg-primary' : 'bg-gray-300',
+        disabled && 'opacity-40 cursor-not-allowed'
       )}
     >
       <div

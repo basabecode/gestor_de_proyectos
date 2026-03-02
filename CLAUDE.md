@@ -37,15 +37,15 @@ There are no tests in this project.
 
 All stores use `persist` middleware. localStorage keys:
 
-| Store | Key | Owns |
-|---|---|---|
-| `boardStore.js` | `workos-boards` | Boards, groups, items, columns, comments, attachments, sub-items |
-| `uiStore.js` | `workos-ui` | Sidebar collapsed state, theme, modal visibility, search palette |
-| `automationStore.js` | `workos-automations` | Automation rules and execution logs |
-| `dashboardStore.js` | `workos-dashboard` | Widget configurations and layout |
-| `notificationStore.js` | `workos-notifications` | Notifications and unread count |
-| `userStore.js` | `workos-user` | Current user profile and team members |
-| `workspaceStore.js` | `workos-workspaces` | Workspace management |
+| Store                  | Key                    | Owns                                                             |
+| ---------------------- | ---------------------- | ---------------------------------------------------------------- |
+| `boardStore.js`        | `workos-boards`        | Boards, groups, items, columns, comments, attachments, sub-items |
+| `uiStore.js`           | `workos-ui`            | Sidebar collapsed state, theme, modal visibility, search palette |
+| `automationStore.js`   | `workos-automations`   | Automation rules and execution logs                              |
+| `dashboardStore.js`    | `workos-dashboard`     | Widget configurations and layout                                 |
+| `notificationStore.js` | `workos-notifications` | Notifications and unread count                                   |
+| `userStore.js`         | `workos-user`          | Current user profile and team members                            |
+| `workspaceStore.js`    | `workos-workspaces`    | Workspace management                                             |
 
 `boardStore` is by far the largest and most central store.
 
@@ -76,3 +76,18 @@ src/components/
 ### Data Import/Export
 
 `src/utils/csvHandler.js` handles CSV (PapaParse) and Excel (XLSX) import/export. `src/utils/storage.js` abstracts localStorage with a fallback to `window.storage` for environments where localStorage is unavailable.
+
+## Al finalizar cada tarea
+
+1. Ejecuta el build del proyecto (`npm run build` o el comando correspondiente).
+2. Verifica que el build compile sin errores.
+3. Crea tests unitarios para cada funcionalidad nueva o modificada.
+4. Ejecuta todos los tests (`npm test`) y verifica que pasen.
+5. Si algún test falla, corrígelo antes de dar la tarea como terminada.
+
+## Estándares de testing
+
+- Usa [jest/vitest/pytest] (ajusta según tu stack).
+- Cada función pública debe tener al menos un test.
+- Incluye casos edge y validaciones de error.
+- Los tests deben ser descriptivos en sus nombres.

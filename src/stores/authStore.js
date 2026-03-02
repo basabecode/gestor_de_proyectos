@@ -36,18 +36,28 @@ const useAuthStore = create((set, get) => ({
       await get().fetchProfile(user.id)
       const profile = get().profile
 
-      const { default: useUserStore }      = await import('./userStore')
-      const { default: useWorkspaceStore } = await import('./workspaceStore')
+      const { default: useUserStore }        = await import('./userStore')
+      const { default: useWorkspaceStore }   = await import('./workspaceStore')
+      const { default: useOrganizationStore} = await import('./organizationStore')
+      const { default: useLicenseStore }     = await import('./licenseStore')
 
       useUserStore.getState().syncFromProfile(profile)
 
       await useWorkspaceStore.getState().fetchWorkspaces()
       const ws = await useWorkspaceStore.getState().ensureDefaultWorkspace()
       if (ws?.id) useUserStore.getState().fetchTeamMembers(ws.id)
+
+      // Cargar organización y licencia
+      const orgId = profile?.organization_id
+      if (orgId) {
+        await Promise.all([
+          useOrganizationStore.getState().fetchOrganization(orgId),
+          useLicenseStore.getState().fetchLicense(orgId),
+        ])
+      }
     } catch (err) {
       console.error('[authStore] _onSignedIn error:', err)
     } finally {
-      // El app ya puede renderizar — con o sin error de workspace
       set({ ready: true })
     }
   },
@@ -55,10 +65,14 @@ const useAuthStore = create((set, get) => ({
   _onSignedOut: async () => {
     set({ profile: null, ready: false })
     try {
-      const { default: useWorkspaceStore } = await import('./workspaceStore')
-      const { default: useBoardStore }     = await import('./boardStore')
+      const { default: useWorkspaceStore }    = await import('./workspaceStore')
+      const { default: useBoardStore }        = await import('./boardStore')
+      const { default: useOrganizationStore } = await import('./organizationStore')
+      const { default: useLicenseStore }      = await import('./licenseStore')
       useWorkspaceStore.getState().reset()
       useBoardStore.getState().reset?.()
+      useOrganizationStore.getState().reset()
+      useLicenseStore.getState().reset()
     } catch { /* silent */ }
   },
 

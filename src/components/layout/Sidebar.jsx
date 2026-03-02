@@ -63,30 +63,45 @@ export default function Sidebar({ onNavigate }) {
   return (
     <aside
       className={cn(
-        'h-screen flex flex-col bg-sidebar-bg text-sidebar-text transition-all duration-200 shrink-0',
+        'h-full flex flex-col bg-sidebar-bg text-sidebar-text transition-all duration-200 shrink-0',
         sidebarCollapsed ? 'w-[52px]' : 'w-[260px]'
       )}
     >
       {/* Logo */}
-      <div className="flex items-center justify-between px-3 h-14 border-b border-white/10">
+      <div
+        className="flex items-center justify-between px-3 h-14 shrink-0"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+      >
         {!sidebarCollapsed && (
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleNavigate('/')}>
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <LayoutGrid className="w-4 h-4 text-white" />
+          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => handleNavigate('/')}>
+            {/* Mark — solid accent square, not a LayoutGrid icon */}
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: 'linear-gradient(135deg, #00c875, #00a060)', boxShadow: '0 2px 8px rgba(0,200,117,0.35)' }}
+            >
+              <LayoutGrid className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
             </div>
-            <span className="font-bold text-white text-[15px]">Work OS</span>
+            <span
+              className="font-semibold text-white text-[15px] tracking-[-0.02em]"
+              style={{ fontFamily: "'Sora', sans-serif" }}
+            >
+              Work OS
+            </span>
           </div>
         )}
         <button
           onClick={toggleSidebar}
-          className="p-1.5 hover:bg-sidebar-hover rounded transition-colors"
+          className="p-1.5 rounded-md transition-colors"
+          style={{ color: 'rgba(200,214,232,0.4)' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
           {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>
       </div>
 
       {/* Main navigation */}
-      <nav className="px-2 py-2 space-y-0.5">
+      <nav className="px-2 pt-3 pb-1 space-y-0.5">
         {mainNav.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
@@ -94,16 +109,29 @@ export default function Sidebar({ onNavigate }) {
             <button
               key={item.id}
               onClick={() => handleNavigate(item.path)}
-              className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] font-medium transition-colors',
-                isActive
-                  ? 'bg-sidebar-active text-white'
-                  : 'text-sidebar-text hover:bg-sidebar-hover'
-              )}
               title={sidebarCollapsed ? item.label : undefined}
+              className="relative w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150"
+              style={{
+                color: isActive ? '#ffffff' : 'rgba(200,214,232,0.7)',
+                background: isActive ? 'rgba(0,200,117,0.12)' : 'transparent',
+              }}
+              onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = isActive ? 'rgba(0,200,117,0.12)' : 'transparent'; e.currentTarget.style.color = isActive ? '#ffffff' : 'rgba(200,214,232,0.7)'; }}
             >
-              <Icon className="w-[18px] h-[18px] shrink-0" />
-              {!sidebarCollapsed && item.label}
+              {/* Accent pip — visible only on active */}
+              {isActive && (
+                <span
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full"
+                  style={{ background: '#00c875', boxShadow: '0 0 8px rgba(0,200,117,0.7)' }}
+                />
+              )}
+              <Icon
+                className="shrink-0"
+                size={16}
+                strokeWidth={isActive ? 2.2 : 1.8}
+                style={{ color: isActive ? '#00c875' : 'inherit' }}
+              />
+              {!sidebarCollapsed && <span>{item.label}</span>}
               {item.id === 'inbox' && unreadCount > 0 && (
                 <span className="ml-auto text-[9px] font-bold bg-status-red text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
                   {unreadCount > 99 ? '99+' : unreadCount}
@@ -115,20 +143,26 @@ export default function Sidebar({ onNavigate }) {
       </nav>
 
       {/* Divider */}
-      <div className="mx-3 my-2 border-t border-white/10" />
+      <div className="mx-3 my-1" style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
 
       {/* Boards section */}
       {!sidebarCollapsed && (
         <div className="flex-1 overflow-y-auto px-2">
-          <div className="flex items-center justify-between px-3 py-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-text/60">
+          <div className="flex items-center justify-between px-3 py-2">
+            <span
+              className="text-[10px] font-semibold uppercase tracking-[0.08em]"
+              style={{ fontFamily: "'Sora', sans-serif", color: 'rgba(200,214,232,0.35)' }}
+            >
               Tableros
             </span>
             <Guard action="create:board">
               <button
                 onClick={() => openModal('createBoard')}
-                className="p-1 hover:bg-sidebar-hover rounded transition-colors"
+                className="p-1 rounded-md transition-colors"
+                style={{ color: 'rgba(200,214,232,0.35)' }}
                 title="Nuevo tablero"
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(200,214,232,0.8)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(200,214,232,0.35)'; }}
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -147,14 +181,21 @@ export default function Sidebar({ onNavigate }) {
                 >
                   <button
                     onClick={() => handleNavigate(`/board/${board.id}`)}
-                    className={cn(
-                      'w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-[13px] transition-colors text-left',
-                      isActive
-                        ? 'bg-sidebar-active text-white'
-                        : 'text-sidebar-text hover:bg-sidebar-hover'
-                    )}
+                    className="relative w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] transition-all text-left"
+                    style={{
+                      color: isActive ? '#ffffff' : 'rgba(200,214,232,0.6)',
+                      background: isActive ? 'rgba(0,200,117,0.12)' : 'transparent',
+                    }}
+                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(200,214,232,0.9)'; } }}
+                    onMouseLeave={e => { e.currentTarget.style.background = isActive ? 'rgba(0,200,117,0.12)' : 'transparent'; e.currentTarget.style.color = isActive ? '#ffffff' : 'rgba(200,214,232,0.6)'; }}
                   >
-                    <FolderOpen className="w-4 h-4 shrink-0 opacity-70" />
+                    {isActive && (
+                      <span
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full"
+                        style={{ background: '#00c875', boxShadow: '0 0 6px rgba(0,200,117,0.6)' }}
+                      />
+                    )}
+                    <FolderOpen className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} style={{ color: isActive ? '#00c875' : 'inherit' }} />
                     <span className="truncate">{board.name}</span>
                   </button>
 
@@ -207,35 +248,50 @@ export default function Sidebar({ onNavigate }) {
         </div>
       )}
 
-      {/* Bottom */}
-      <div className="px-2 py-3 border-t border-white/10 space-y-0.5">
+      {/* Bottom — Settings + User */}
+      <div
+        className="px-2 py-3 space-y-0.5"
+        style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+      >
         <button
           onClick={() => handleNavigate('/settings')}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] text-sidebar-text hover:bg-sidebar-hover transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all"
+          style={{ color: 'rgba(200,214,232,0.6)' }}
           title={sidebarCollapsed ? 'Configuración' : undefined}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(200,214,232,0.9)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(200,214,232,0.6)'; }}
         >
-          <Settings className="w-[18px] h-[18px] shrink-0" />
+          <Settings className="w-4 h-4 shrink-0" strokeWidth={1.8} />
           {!sidebarCollapsed && 'Configuración'}
         </button>
 
-        {/* Usuario + Logout */}
+        {/* Usuario + Logout — zona refinada */}
         {!sidebarCollapsed && (
-          <div className="flex items-center gap-2 px-3 py-2">
+          <div
+            className="flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all cursor-default"
+            style={{ marginTop: '4px' }}
+          >
             <div
-              className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0 shadow-xs"
-              style={{ backgroundColor: profile?.color || '#00c875' }}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0"
+              style={{
+                backgroundColor: profile?.color || '#00c875',
+                boxShadow: `0 0 0 2px rgba(12,20,32,1), 0 0 0 3px ${profile?.color || '#00c875'}40`,
+              }}
             >
               {(profile?.full_name || 'U').charAt(0).toUpperCase()}
             </div>
-            <span className="text-[12px] font-medium text-sidebar-text/90 truncate flex-1">
+            <span className="text-[12px] font-medium truncate flex-1" style={{ color: 'rgba(200,214,232,0.8)' }}>
               {profile?.full_name || 'Usuario'}
             </span>
             <button
               onClick={handleSignOut}
               title="Cerrar sesión"
-              className="p-1.5 hover:bg-status-red/10 rounded-md transition-colors text-sidebar-text/60 hover:text-status-red"
+              className="p-1.5 rounded-md transition-all"
+              style={{ color: 'rgba(200,214,232,0.35)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(226,68,92,0.12)'; e.currentTarget.style.color = '#e2445c'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(200,214,232,0.35)'; }}
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
         )}

@@ -1,11 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Sora:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  /* Brand colors (preserved from original) */
+  /* Brand colors */
   --color-shatter-primary: #181B34;
   --color-shatter-accent: #6161FF;
 
-  /* Wrike inspired Work OS palette */
+  /* Work OS palette */
   --color-primary: #00c875;
   --color-primary-hover: #00b065;
   --color-primary-light: #e6f9f0;
@@ -16,7 +17,7 @@
   --color-border-light: #f1f5f9;
   --color-text-primary: #081829;
   --color-text-secondary: #64748b;
-  --color-text-disabled: #cbd5e1;
+  --color-text-disabled: #a8b5c7;
 
   /* Status colors */
   --color-status-green: #00c875;
@@ -42,11 +43,11 @@
   --color-group-orange: #ff642e;
   --color-group-yellow: #fdab3d;
 
-  /* Sidebar (Premium Dark Slate matching Login Text) */
-  --color-sidebar-bg: #081829;
-  --color-sidebar-hover: #1e293b;
+  /* Sidebar — Precision Dark */
+  --color-sidebar-bg: #0c1420;
+  --color-sidebar-hover: rgba(255,255,255,0.06);
   --color-sidebar-active: #00c875;
-  --color-sidebar-text: #f8fafc;
+  --color-sidebar-text: #c8d6e8;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -57,11 +58,43 @@
 
 /* Base styles */
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* DM Sans: geometric humanist, clean and distinctive — NOT a generic system font */
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--color-surface-secondary);
   color: var(--color-text-primary);
   font-size: 0.875rem;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  letter-spacing: -0.01em;
+}
+
+/* Sora — display / label / heading font */
+.font-display,
+h1, h2, h3 {
+  font-family: 'Sora', 'DM Sans', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* ─── Placeholder global ─────────────────────────────────────────────────── */
+/* Todos los inputs, textareas y selects del proyecto heredan este estilo.   */
+/* El placeholder desaparece automáticamente al escribir (comportamiento     */
+/* nativo del navegador). Solo ajustamos color y transición.                 */
+::placeholder {
+  color: var(--color-text-disabled); /* #cbd5e1 — semitransparente */
+  opacity: 1;                        /* Firefox lo pone al 54% por defecto */
+  transition: opacity 0.15s ease;
+}
+
+/* Cuando el input tiene foco el placeholder se desvanece suavemente */
+:focus::placeholder {
+  opacity: 0;
+}
+
+/* settings-input también hereda, pero reforzamos por si acaso */
+.settings-input::placeholder {
+  color: var(--color-text-disabled);
+  opacity: 1;
 }
 
 /* Scrollbar */

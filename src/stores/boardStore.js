@@ -351,7 +351,41 @@ const useBoardStore = create((set, get) => ({
   },
 
   updateItemColumnWithActivity: async (boardId, itemId, columnId, value) => {
+    const board = get().boards.find((b) => b.id === boardId)
+    const item  = board?.items.find((i) => i.id === itemId)
+    const oldValue = item?.columnValues?.[columnId]
+
     await get().updateItemColumn(boardId, itemId, columnId, value)
+
+    // Disparar notificación en cambios relevantes
+    try {
+      const { default: useNotificationStore } = await import('./notificationStore')
+      const addNotification = useNotificationStore.getState().addNotification
+
+      if (columnId === 'person' && value && value !== oldValue) {
+        await addNotification({
+          type:      'assignment',
+          title:     'Nueva asignación',
+          message:   `Se te asignó "${item?.title || 'un elemento'}" en el tablero`,
+          boardId,
+          itemId,
+          itemTitle: item?.title || null,
+          author:    'Sistema',
+        })
+      }
+
+      if (columnId === 'status' && value && value !== oldValue) {
+        await addNotification({
+          type:      'info',
+          title:     'Estado actualizado',
+          message:   `"${item?.title || 'Elemento'}" cambió de estado a "${value}"`,
+          boardId,
+          itemId,
+          itemTitle: item?.title || null,
+          author:    'Sistema',
+        })
+      }
+    } catch { /* no bloquear la actualización si falla la notificación */ }
   },
 
   deleteItem: async (boardId, itemId) => {

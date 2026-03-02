@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   LayoutGrid, Target, Users, ShoppingCart, Bug, BookOpen,
@@ -151,6 +151,8 @@ export default function CreateBoardModal() {
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [namePlaceholder, setNamePlaceholder] = useState('Ej: Proyecto Marketing Q1');
+  const [descPlaceholder, setDescPlaceholder] = useState('Describe el propósito del tablero...');
   const [error, setError] = useState('');
 
   const resetAndClose = () => {
@@ -159,13 +161,18 @@ export default function CreateBoardModal() {
     setSelectedTemplate(null);
     setName('');
     setDescription('');
+    setNamePlaceholder('Ej: Proyecto Marketing Q1');
+    setDescPlaceholder('Describe el propósito del tablero...');
     setError('');
   };
 
   const handleSelectTemplate = (template) => {
     setSelectedTemplate(template);
-    setName(template.id === 'blank' ? '' : template.name);
-    setDescription(template.description);
+    // Los campos arrancan VACÍOS — el nombre de la plantilla es solo un placeholder sugerido
+    setName('');
+    setDescription('');
+    setNamePlaceholder(template.id === 'blank' ? 'Ej: Mi nuevo tablero' : template.name);
+    setDescPlaceholder(template.description || 'Describe el propósito del tablero...');
     setStep('form');
   };
 
@@ -208,7 +215,14 @@ export default function CreateBoardModal() {
     return board;
   };
 
-  // CSV Import
+  // Pre-cargar datos al abrir en modo edición
+  useEffect(() => {
+    if (isEdit && isOpen && modalData) {
+      setName(modalData.name || '');
+      setDescription(modalData.description || '');
+    }
+  }, [isEdit, isOpen, modalData]);
+
   const handleCSVImport = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -259,10 +273,23 @@ export default function CreateBoardModal() {
     return (
       <Modal open={isOpen} onClose={resetAndClose} title="Editar tablero" size="sm">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <Input label="Nombre" value={name || modalData?.name || ''} onChange={(e) => { setName(e.target.value); setError(''); }} error={error} autoFocus />
+          <Input
+            label="Nombre"
+            value={name}
+            onChange={(e) => { setName(e.target.value); setError(''); }}
+            placeholder="Nombre del tablero"
+            error={error}
+            autoFocus
+          />
           <div>
             <label className="block text-[13px] font-medium text-text-secondary mb-1">Descripción</label>
-            <textarea value={description || modalData?.description || ''} onChange={(e) => setDescription(e.target.value)} rows={3} className="w-full px-3 py-2 text-[14px] rounded border border-border focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none" />
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              placeholder="Describe brevemente el tablero..."
+              className="w-full px-3 py-2 text-[14px] rounded border border-border focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none placeholder:text-text-disabled"
+            />
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" type="button" onClick={resetAndClose}>Cancelar</Button>
@@ -337,10 +364,23 @@ export default function CreateBoardModal() {
             </div>
           )}
 
-          <Input label="Nombre del tablero" value={name} onChange={(e) => { setName(e.target.value); setError(''); }} placeholder="Ej: Proyecto Marketing Q1" error={error} autoFocus />
+          <Input
+            label="Nombre del tablero"
+            value={name}
+            onChange={(e) => { setName(e.target.value); setError(''); }}
+            placeholder={namePlaceholder}
+            error={error}
+            autoFocus
+          />
           <div>
             <label className="block text-[13px] font-medium text-text-secondary mb-1">Descripción (opcional)</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe el propósito del tablero..." rows={2} className="w-full px-3 py-2 text-[14px] rounded border border-border focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none" />
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder={descPlaceholder}
+              rows={2}
+              className="w-full px-3 py-2 text-[14px] rounded border border-border focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary resize-none placeholder:text-text-disabled"
+            />
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="secondary" type="button" onClick={resetAndClose}>Cancelar</Button>
