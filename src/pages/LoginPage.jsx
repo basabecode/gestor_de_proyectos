@@ -392,7 +392,7 @@ export default function LoginPage() {
               className="text-[11px]"
               style={{ color: 'rgba(255,255,255,0.22)' }}
             >
-              © 2025 Work OS · v1.0.0
+              © 2026 Work OS · v1.0.0
             </span>
             <div className="flex items-center gap-4">
               {[
