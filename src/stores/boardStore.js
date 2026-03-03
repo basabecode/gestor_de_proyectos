@@ -452,37 +452,87 @@ const useBoardStore = create((set, get) => ({
     await get().updateBoard(boardId, { columns: board.columns.filter((c) => c.id !== columnId) })
   },
 
-  // ── Sub-items (en memoria, sin tabla propia por ahora) ────────────────────
+  // ── Sub-items — tabla public.sub_items ─────────────────────────────────────
 
-  addSubitem: (boardId, itemId, data = {}) => {
+  addSubitem: async (boardId, itemId, data = {}) => {
     const board = get().boards.find((b) => b.id === boardId)
-    if (!board) return
-    const sub = { id: `sub_${Date.now()}`, title: data.title || '', completed: false, createdAt: new Date().toISOString() }
-    const item = board.items.find((i) => i.id === itemId)
-    if (!item) return
-    const newValues = { ...item.columnValues, __subitems: [...(item.columnValues.__subitems || []), sub] }
-    get().updateItemColumn(boardId, itemId, '__subitems', newValues.__subitems)
+    if (!board) return null
+    const pos = (board.items.find((i) => i.id === itemId)?.subitems || []).length
+
+    const { data: row, error } = await supabase
+      .from('sub_items')
+      .insert({ item_id: itemId, name: data.title || '', completed: false, position: pos })
+      .select()
+      .single()
+
+    if (error) { set({ error: error.message }); return null }
+
+    const sub = { id: row.id, title: row.name, completed: row.completed, createdAt: row.created_at }
+    set((s) => {
+      const patch = (b) => b.id === boardId
+        ? { ...b, items: b.items.map((i) => i.id === itemId ? { ...i, subitems: [...(i.subitems || []), sub] } : i) }
+        : b
+      return { boards: s.boards.map(patch), activeBoard: s.activeBoard?.id === boardId ? patch(s.activeBoard) : s.activeBoard }
+    })
     return sub
   },
 
-  toggleSubitem: (boardId, itemId, subitemId) => {
+  toggleSubitem: async (boardId, itemId, subitemId) => {
     const board = get().boards.find((b) => b.id === boardId)
     if (!board) return
     const item = board.items.find((i) => i.id === itemId)
     if (!item) return
-    const subs = (item.columnValues.__subitems || []).map((s) =>
-      s.id === subitemId ? { ...s, completed: !s.completed } : s
-    )
-    get().updateItemColumn(boardId, itemId, '__subitems', subs)
+    const sub = (item.subitems || []).find((s) => s.id === subitemId)
+    if (!sub) return
+
+    const newCompleted = !sub.completed
+    await supabase.from('sub_items').update({ completed: newCompleted }).eq('id', subitemId)
+
+    set((s) => {
+      const patch = (b) => b.id === boardId
+        ? { ...b, items: b.items.map((i) => i.id === itemId
+            ? { ...i, subitems: (i.subitems || []).map((s) => s.id === subitemId ? { ...s, completed: newCompleted } : s) }
+            : i) }
+        : b
+      return { boards: s.boards.map(patch), activeBoard: s.activeBoard?.id === boardId ? patch(s.activeBoard) : s.activeBoard }
+    })
   },
 
-  deleteSubitem: (boardId, itemId, subitemId) => {
-    const board = get().boards.find((b) => b.id === boardId)
-    if (!board) return
-    const item = board.items.find((i) => i.id === itemId)
-    if (!item) return
-    const subs = (item.columnValues.__subitems || []).filter((s) => s.id !== subitemId)
-    get().updateItemColumn(boardId, itemId, '__subitems', subs)
+  deleteSubitem: async (boardId, itemId, subitemId) => {
+    await supabase.from('sub_items').delete().eq('id', subitemId)
+    set((s) => {
+      const patch = (b) => b.id === boardId
+        ? { ...b, items: b.items.map((i) => i.id === itemId
+            ? { ...i, subitems: (i.subitems || []).filter((s) => s.id !== subitemId) }
+            : i) }
+        : b
+      return { boards: s.boards.map(patch), activeBoard: s.activeBoard?.id === boardId ? patch(s.activeBoard) : s.activeBoard }
+    })
+  },
+
+  // Carga sub-items desde DB (llamar al abrir ItemDetailPanel)
+  fetchSubitems: async (boardId, itemId) => {
+    const { data, error } = await supabase
+      .from('sub_items')
+      .select('*')
+      .eq('item_id', itemId)
+      .order('position', { ascending: true })
+
+    if (error || !data) return
+
+    const subitems = data.map((row) => ({
+      id:        row.id,
+      title:     row.name,
+      completed: row.completed,
+      createdAt: row.created_at,
+    }))
+
+    set((s) => {
+      const patch = (b) => b.id === boardId
+        ? { ...b, items: b.items.map((i) => i.id === itemId ? { ...i, subitems } : i) }
+        : b
+      return { boards: s.boards.map(patch), activeBoard: s.activeBoard?.id === boardId ? patch(s.activeBoard) : s.activeBoard }
+    })
   },
 
   // ── Comments ───────────────────────────────────────────────────────────────
@@ -647,13 +697,77 @@ const useBoardStore = create((set, get) => ({
     })
   },
 
-  // ── Activity log ───────────────────────────────────────────────────────────
+  // ── Activity log — tabla public.activity_logs ───────────────────────────────
 
-  addActivity: (boardId, itemId, activity) => {
-    const entry = { id: `act_${Date.now()}`, ...activity, createdAt: new Date().toISOString() }
+  addActivity: async (boardId, itemId, activity) => {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const { data: row, error } = await supabase
+      .from('activity_logs')
+      .insert({
+        item_id:   itemId,
+        board_id:  boardId,
+        user_id:   user?.id,
+        type:      activity.type      || 'update',
+        text:      activity.text      || '',
+        author:    activity.author    || user?.email || 'Usuario',
+        field:     activity.field     || null,
+        old_value: activity.oldValue  || null,
+        new_value: activity.newValue  || null,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      // Fallo silencioso: el activity log nunca debe bloquear operaciones
+      console.warn('[activity_logs] insert error:', error.message)
+      return
+    }
+
+    const entry = {
+      id:        row.id,
+      type:      row.type,
+      text:      row.text,
+      author:    row.author,
+      field:     row.field,
+      oldValue:  row.old_value,
+      newValue:  row.new_value,
+      createdAt: row.created_at,
+    }
+
     set((s) => {
       const patch = (b) => b.id === boardId
         ? { ...b, items: b.items.map((i) => i.id === itemId ? { ...i, activityLog: [...(i.activityLog || []), entry] } : i) }
+        : b
+      return { boards: s.boards.map(patch), activeBoard: s.activeBoard?.id === boardId ? patch(s.activeBoard) : s.activeBoard }
+    })
+  },
+
+  // Carga el activity log desde DB (llamar al abrir ItemDetailPanel)
+  fetchActivityLog: async (boardId, itemId) => {
+    const { data, error } = await supabase
+      .from('activity_logs')
+      .select('*')
+      .eq('item_id', itemId)
+      .order('created_at', { ascending: false })
+      .limit(50)
+
+    if (error || !data) return
+
+    const activityLog = data.map((row) => ({
+      id:        row.id,
+      type:      row.type,
+      text:      row.text,
+      author:    row.author,
+      field:     row.field,
+      oldValue:  row.old_value,
+      newValue:  row.new_value,
+      createdAt: row.created_at,
+    }))
+
+    set((s) => {
+      const patch = (b) => b.id === boardId
+        ? { ...b, items: b.items.map((i) => i.id === itemId ? { ...i, activityLog } : i) }
         : b
       return { boards: s.boards.map(patch), activeBoard: s.activeBoard?.id === boardId ? patch(s.activeBoard) : s.activeBoard }
     })

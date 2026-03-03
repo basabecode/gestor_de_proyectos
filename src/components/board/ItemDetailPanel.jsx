@@ -19,7 +19,7 @@ const TABS = [
 const TEAM_MEMBERS = ['Carlos', 'Ana', 'Miguel', 'Laura', 'Pedro', 'Sofia', 'Diego', 'Maria'];
 
 export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
-  const { boards, addComment, deleteComment, addAttachment, deleteAttachment, fetchAttachments, addSubitem, toggleSubitem, deleteSubitem, updateItem } = useBoardStore();
+  const { boards, addComment, deleteComment, addAttachment, deleteAttachment, fetchAttachments, fetchSubitems, fetchActivityLog, addSubitem, toggleSubitem, deleteSubitem, updateItem } = useBoardStore();
   const { addNotification } = useNotificationStore();
   const [activeTab, setActiveTab] = useState('updates');
   const [commentText, setCommentText] = useState('');
@@ -52,10 +52,12 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
     m.toLowerCase().includes(mentionSearch.toLowerCase())
   );
 
-  // Cargar attachments desde DB cuando se abre el panel
+  // Cargar datos persistentes desde DB cuando se abre el panel
   useEffect(() => {
-    if (open && itemId && boardId && fetchAttachments) {
-      fetchAttachments(boardId, itemId)
+    if (open && itemId && boardId) {
+      fetchAttachments?.(boardId, itemId)
+      fetchSubitems?.(boardId, itemId)
+      fetchActivityLog?.(boardId, itemId)
     }
   }, [open, itemId, boardId])
 
