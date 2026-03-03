@@ -253,17 +253,19 @@ export default function Sidebar({ onNavigate }) {
         className="px-2 py-3 space-y-0.5"
         style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
       >
-        <button
-          onClick={() => handleNavigate('/settings')}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all"
-          style={{ color: 'rgba(200,214,232,0.6)' }}
-          title={sidebarCollapsed ? 'Configuración' : undefined}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(200,214,232,0.9)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(200,214,232,0.6)'; }}
-        >
-          <Settings className="w-4 h-4 shrink-0" strokeWidth={1.8} />
-          {!sidebarCollapsed && 'Configuración'}
-        </button>
+        <Guard action="manage:settings">
+          <button
+            onClick={() => handleNavigate('/settings')}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all"
+            style={{ color: 'rgba(200,214,232,0.6)' }}
+            title={sidebarCollapsed ? 'Configuración' : undefined}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'rgba(200,214,232,0.9)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(200,214,232,0.6)'; }}
+          >
+            <Settings className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+            {!sidebarCollapsed && 'Configuración'}
+          </button>
+        </Guard>
 
         {/* Usuario + Logout — zona refinada */}
         {!sidebarCollapsed && (

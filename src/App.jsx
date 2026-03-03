@@ -1,9 +1,10 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import CreateBoardModal from './components/board/CreateBoardModal';
 import SearchPalette from './components/common/SearchPalette';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import { usePermission } from './lib/permissions';
 
 // Auth pages (no lazy — pequeñas y críticas para el primer render)
 import LoginPage          from './pages/LoginPage';
@@ -18,6 +19,12 @@ const InboxPage          = lazy(() => import('./pages/InboxPage'));
 const SettingsPage       = lazy(() => import('./pages/SettingsPage'));
 const PortfolioPage      = lazy(() => import('./pages/PortfolioPage'));
 const PortfolioDetailPage = lazy(() => import('./pages/PortfolioDetailPage'));
+
+/** Protege una ruta por permiso RBAC — redirige a '/' si no autorizado */
+function PermissionRoute({ action, children }) {
+  const allowed = usePermission(action);
+  return allowed ? children : <Navigate to="/" replace />;
+}
 
 function PageLoader() {
   return (
@@ -46,7 +53,11 @@ export default function App() {
           <Route path="/board/:boardId" element={<Suspense fallback={<PageLoader />}><BoardPage /></Suspense>} />
           <Route path="/dashboard"    element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
           <Route path="/inbox"        element={<Suspense fallback={<PageLoader />}><InboxPage /></Suspense>} />
-          <Route path="/settings"      element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
+          <Route path="/settings" element={
+            <PermissionRoute action="manage:settings">
+              <Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>
+            </PermissionRoute>
+          } />
           <Route path="/portfolios"    element={<Suspense fallback={<PageLoader />}><PortfolioPage /></Suspense>} />
           <Route path="/portfolio/:id" element={<Suspense fallback={<PageLoader />}><PortfolioDetailPage /></Suspense>} />
         </Route>

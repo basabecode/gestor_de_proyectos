@@ -96,16 +96,25 @@ describe('CreateBoardModal — template selection step', () => {
     expect(screen.getByTestId('input-Nombre del tablero')).toBeInTheDocument();
   });
 
-  it('pre-fills name when a non-blank template is selected', async () => {
+  it('deja el nombre vacío cuando se selecciona una plantilla no-blank (el usuario escribe el nombre)', async () => {
     render(<CreateBoardModal />);
     await userEvent.click(screen.getByText('Gestión de proyecto'));
-    expect(screen.getByTestId('input-Nombre del tablero').value).toBe('Gestión de proyecto');
+    // El nombre siempre arranca vacío — el placeholder sugiere el nombre de la plantilla
+    expect(screen.getByTestId('input-Nombre del tablero').value).toBe('');
   });
 
-  it('leaves name empty when blank template is selected', async () => {
+  it('deja el nombre vacío cuando se selecciona tablero vacío', async () => {
     render(<CreateBoardModal />);
     await userEvent.click(screen.getByText('Tablero vacío'));
     expect(screen.getByTestId('input-Nombre del tablero').value).toBe('');
+  });
+
+  it('muestra el nombre de la plantilla como placeholder', async () => {
+    render(<CreateBoardModal />);
+    await userEvent.click(screen.getByText('Gestión de proyecto'));
+    const input = screen.getByTestId('input-Nombre del tablero');
+    // El placeholder (atributo HTML) coincide con el nombre de la plantilla
+    expect(input.placeholder).toBe('Gestión de proyecto');
   });
 });
 
