@@ -6,6 +6,9 @@ import {
 } from 'lucide-react';
 import useBoardStore from '../../stores/boardStore';
 import useNotificationStore from '../../stores/notificationStore';
+import useUserStore from '@/stores/userStore';
+import useAuthStore from '@/stores/authStore';
+import { useCurrentRole, canEditItem } from '@/lib/permissions';
 import { Avatar } from '../ui';
 import { cn, generateId, formatRelativeDate, formatDate } from '../../lib/utils';
 import { STATUS_LABELS, STATUS_COLORS, PRIORITY_LABELS, PRIORITY_COLORS } from '../../lib/constants';
@@ -16,11 +19,12 @@ const TABS = [
   { id: 'activity', label: 'Actividad', icon: Clock },
 ];
 
-const TEAM_MEMBERS = ['Carlos', 'Ana', 'Miguel', 'Laura', 'Pedro', 'Sofia', 'Diego', 'Maria'];
-
 export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
   const { boards, addComment, deleteComment, addAttachment, deleteAttachment, fetchAttachments, fetchSubitems, fetchActivityLog, addSubitem, toggleSubitem, deleteSubitem, updateItem } = useBoardStore();
   const { addNotification } = useNotificationStore();
+  const teamMembers = useUserStore((s) => s.teamMembers);
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const role = useCurrentRole();
   const [activeTab, setActiveTab] = useState('updates');
   const [commentText, setCommentText] = useState('');
   const [showMentions, setShowMentions] = useState(false);
@@ -48,9 +52,18 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
     return found;
   }, [commentText]);
 
-  const filteredMembers = TEAM_MEMBERS.filter((m) =>
-    m.toLowerCase().includes(mentionSearch.toLowerCase())
+  const filteredMembers = teamMembers.filter((m) =>
+    m.name.toLowerCase().includes(mentionSearch.toLowerCase())
   );
+
+  // Permisos: member solo edita tareas asignadas a él
+  const canEdit = canEditItem(currentUserId, item, role);
+
+  // Resolver UUID de persona asignada → nombre para display en actividad
+  const resolvePersonName = (val) => {
+    const member = teamMembers.find((m) => m.id === val);
+    return member?.name || val || '';
+  };
 
   // Cargar datos persistentes desde DB cuando se abre el panel
   useEffect(() => {
@@ -232,12 +245,14 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
             <span className="text-[12px] font-semibold text-text-secondary">
               Sub-elementos {subitems.length > 0 && `(${completedSubitems}/${subitems.length})`}
             </span>
-            <button
-              onClick={() => setShowAddSubitem(!showAddSubitem)}
-              className="text-[11px] text-primary hover:underline flex items-center gap-1"
-            >
-              <Plus className="w-3 h-3" /> Agregar
-            </button>
+            {canEdit && (
+              <button
+                onClick={() => setShowAddSubitem(!showAddSubitem)}
+                className="text-[11px] text-primary hover:underline flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" /> Agregar
+              </button>
+            )}
           </div>
 
           {subitems.length > 0 && (
@@ -373,12 +388,12 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
                       <p className="px-3 py-1 text-[10px] font-semibold text-text-disabled uppercase">Mencionar a</p>
                       {filteredMembers.map((member) => (
                         <button
-                          key={member}
-                          onClick={() => insertMention(member)}
+                          key={member.id}
+                          onClick={() => insertMention(member.name)}
                           className="w-full px-3 py-1.5 text-left text-[12px] flex items-center gap-2 hover:bg-surface-secondary"
                         >
-                          <Avatar name={member} size="xs" />
-                          {member}
+                          <Avatar name={member.name} size="xs" />
+                          {member.name}
                         </button>
                       ))}
                       {filteredMembers.length === 0 && (
@@ -444,14 +459,16 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
                 className="hidden"
                 onChange={handleFileUpload}
               />
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full border-2 border-dashed border-border rounded-lg py-6 text-center hover:border-primary hover:bg-primary/5 transition-colors mb-4"
-              >
-                <Paperclip className="w-6 h-6 text-text-disabled mx-auto mb-1" />
-                <p className="text-[13px] text-text-secondary">Arrastra archivos o haz clic para adjuntar</p>
-                <p className="text-[10px] text-text-disabled mt-0.5">Máximo 10MB · Imágenes, PDF, Office, ZIP</p>
-              </button>
+              {canEdit && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-2 border-dashed border-border rounded-lg py-6 text-center hover:border-primary hover:bg-primary/5 transition-colors mb-4"
+                >
+                  <Paperclip className="w-6 h-6 text-text-disabled mx-auto mb-1" />
+                  <p className="text-[13px] text-text-secondary">Arrastra archivos o haz clic para adjuntar</p>
+                  <p className="text-[10px] text-text-disabled mt-0.5">Máximo 10MB · Imágenes, PDF, Office, ZIP</p>
+                </button>
+              )}
 
               {/* Archivos subiendo */}
               {uploadingFiles.length > 0 && (

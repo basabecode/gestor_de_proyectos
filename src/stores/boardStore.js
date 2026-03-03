@@ -35,6 +35,7 @@ export function rowToBoard(board, groups = [], items = []) {
         groupId:      i.group_id,
         title:        i.name,
         columnValues: i.values || {},
+        assignedTo:   i.assigned_to || null,
         subitems:     [],
         comments:     [],
         activityLog:  [],
@@ -348,6 +349,18 @@ const useBoardStore = create((set, get) => ({
     if (!item) return
     const newValues = { ...item.columnValues, [columnId]: value }
     await get().updateItem(boardId, itemId, { columnValues: newValues })
+    // Sincronizar assigned_to cuando cambia la columna persona
+    if (columnId === 'person') {
+      await supabase.from('items').update({ assigned_to: value || null }).eq('id', itemId)
+      // Actualizar estado local
+      set((s) => ({
+        boards: s.boards.map((b) =>
+          b.id === boardId
+            ? { ...b, items: b.items.map((i) => i.id === itemId ? { ...i, assignedTo: value || null } : i) }
+            : b
+        ),
+      }))
+    }
   },
 
   updateItemColumnWithActivity: async (boardId, itemId, columnId, value) => {

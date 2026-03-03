@@ -14,6 +14,20 @@ const PERMISSIONS = {
   'export:data':         ['owner', 'admin', 'member'],
   'manage:settings':     ['owner', 'admin'],
   'add:columns':         ['owner', 'admin'],
+  'assign:items':        ['owner', 'admin'],
+}
+
+// Comprueba si el usuario puede editar un ítem concreto.
+// owner/admin: siempre pueden. member: solo su tarea asignada.
+export function canEditItem(currentUserId, item, role) {
+  if (['owner', 'admin'].includes(role)) return true
+  if (role === 'member') {
+    return (
+      item?.assignedTo === currentUserId ||
+      item?.columnValues?.person === currentUserId
+    )
+  }
+  return false // viewer
 }
 
 // Función pura — usable fuera de componentes

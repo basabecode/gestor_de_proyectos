@@ -7,6 +7,8 @@ import toast from 'react-hot-toast';
 import useBoardStore from '../../stores/boardStore';
 import useAutomationStore, { TRIGGER_TYPES } from '../../stores/automationStore';
 import useNotificationStore from '../../stores/notificationStore';
+import useAuthStore from '../../stores/authStore';
+import { useCurrentRole, canEditItem } from '../../lib/permissions';
 import StatusCell from './columns/StatusCell';
 import PersonCell from './columns/PersonCell';
 import DateCell from './columns/DateCell';
@@ -39,6 +41,9 @@ export default function BoardRow({ board, item, columns, groupColor, sortable, l
   const { updateItem, updateItemColumn, deleteItem } = useBoardStore();
   const { executeAutomations } = useAutomationStore();
   const { addNotification } = useNotificationStore();
+  const currentUserId = useAuthStore((s) => s.user?.id);
+  const role = useCurrentRole();
+  const canEdit = canEditItem(currentUserId, item, role);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(item.title);
   const [showMenu, setShowMenu] = useState(false);
@@ -46,6 +51,10 @@ export default function BoardRow({ board, item, columns, groupColor, sortable, l
 
   // Wrapper to trigger automations on column changes
   const handleColumnChange = useCallback((colId, value) => {
+    if (!canEditItem(currentUserId, item, role)) {
+      toast.error('No puedes editar esta tarea');
+      return;
+    }
     const oldValue = item.columnValues?.[colId];
     updateItemColumn(board.id, item.id, colId, value);
 
@@ -126,7 +135,7 @@ export default function BoardRow({ board, item, columns, groupColor, sortable, l
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center border-b border-border-light board-row group/row min-w-fit"
+      className={`flex items-center border-b border-border-light board-row group/row min-w-fit${!canEdit ? ' opacity-60' : ''}`}
     >
       <div className="group-indicator" style={{ backgroundColor: lensColor ?? groupColor }} />
 
