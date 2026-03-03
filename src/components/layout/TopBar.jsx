@@ -54,7 +54,7 @@ export default function TopBar({ title, children }) {
           className="p-2 hover:bg-surface-secondary rounded-md transition-colors"
           title="Buscar (Ctrl+K)"
         >
-          <Search className="w-[18px] h-[18px] text-text-secondary" />
+          <Search className="w-4.5 h-4.5 text-text-secondary" />
         </button>
 
         {/* Notifications */}
@@ -64,9 +64,9 @@ export default function TopBar({ title, children }) {
             className="p-2 hover:bg-surface-secondary rounded-md transition-colors relative"
             title="Notificaciones"
           >
-            <Bell className="w-[18px] h-[18px] text-text-secondary" />
+            <Bell className="w-4.5 h-4.5 text-text-secondary" />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-status-red text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+              <span className="absolute top-1 right-1 min-w-4 h-4 px-1 bg-status-red text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
@@ -75,7 +75,7 @@ export default function TopBar({ title, children }) {
           {showNotifs && (
             <>
               <div className="fixed inset-0 z-30" onClick={() => setShowNotifs(false)} />
-              <div className="absolute right-0 mt-1 w-[calc(100vw-24px)] max-w-[360px] bg-white rounded-lg shadow-lg border border-border-light z-40 animate-slide-down">
+              <div className="absolute right-0 mt-1 w-[calc(100vw-24px)] max-w-90 bg-white rounded-lg shadow-lg border border-border-light z-40 animate-slide-down">
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border-light">
                   <span className="text-[13px] font-semibold text-text-primary">Notificaciones</span>
@@ -92,7 +92,7 @@ export default function TopBar({ title, children }) {
                 </div>
 
                 {/* List */}
-                <div className="max-h-[380px] overflow-y-auto">
+                <div className="max-h-95 overflow-y-auto">
                   {recentNotifs.length === 0 ? (
                     <div className="px-4 py-8 text-center">
                       <Bell className="w-8 h-8 text-text-disabled mx-auto mb-2 opacity-20" />
@@ -145,7 +145,7 @@ export default function TopBar({ title, children }) {
         </div>
 
         <button className="hidden sm:block p-2 hover:bg-surface-secondary rounded-md transition-colors" title="Ayuda">
-          <HelpCircle className="w-[18px] h-[18px] text-text-secondary" />
+          <HelpCircle className="w-4.5 h-4.5 text-text-secondary" />
         </button>
 
         {/* User Profile Dropdown */}

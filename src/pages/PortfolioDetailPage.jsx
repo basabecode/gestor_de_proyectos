@@ -131,7 +131,7 @@ function AssignBoardModal({ portfolioId, programId, alreadyAssigned, onAssign, o
                 <div>
                   <p className="text-[13px] font-medium text-text-primary">{b.name}</p>
                   {b.description && (
-                    <p className="text-[11px] text-text-disabled truncate max-w-[220px]">{b.description}</p>
+                    <p className="text-[11px] text-text-disabled truncate max-w-55">{b.description}</p>
                   )}
                 </div>
               </button>
@@ -236,7 +236,7 @@ function ProgramSection({ portfolio, program, onEdit, onDelete }) {
                 {b.name}
               </button>
               {b.description && (
-                <span className="text-[12px] text-text-disabled truncate max-w-[200px] hidden md:block">{b.description}</span>
+                <span className="text-[12px] text-text-disabled truncate max-w-50 hidden md:block">{b.description}</span>
               )}
               <button
                 onClick={() => handleUnassign(b.id)}
@@ -419,7 +419,7 @@ export default function PortfolioDetailPage() {
                       {b.name}
                     </button>
                     {b.description && (
-                      <span className="text-[12px] text-text-disabled truncate max-w-[200px] hidden md:block">{b.description}</span>
+                      <span className="text-[12px] text-text-disabled truncate max-w-50 hidden md:block">{b.description}</span>
                     )}
                     <button
                       onClick={() => handleUnassignDirect(b.id)}

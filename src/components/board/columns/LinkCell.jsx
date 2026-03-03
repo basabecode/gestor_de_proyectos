@@ -31,7 +31,7 @@ export default function LinkCell({ value, onChange }) {
           href={value}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[11px] text-primary hover:underline truncate max-w-[80px]"
+          className="text-[11px] text-primary hover:underline truncate max-w-20"
           onClick={(e) => e.stopPropagation()}
         >
           <ExternalLink className="w-3.5 h-3.5 inline" />

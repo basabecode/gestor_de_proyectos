@@ -19,7 +19,7 @@ export default function Dropdown({ trigger, children, align = 'left', className 
       {open && (
         <div
           className={cn(
-            'absolute z-50 mt-1 bg-white rounded-lg shadow-lg border border-border-light py-1 min-w-[160px] animate-slide-down',
+            'absolute z-50 mt-1 bg-white rounded-lg shadow-lg border border-border-light py-1 min-w-40 animate-slide-down',
             align === 'right' ? 'right-0' : 'left-0',
             'top-full',
             className

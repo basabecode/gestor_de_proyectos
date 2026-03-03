@@ -176,7 +176,7 @@ export default function HomePage() {
             {/* Add new board card */}
             <div
               onClick={() => openModal('createBoard')}
-              className="bg-white rounded-lg p-4 shadow-[--shadow-sm] border border-dashed border-border hover:border-primary hover:shadow-[--shadow-md] cursor-pointer transition-all flex items-center justify-center min-h-[100px]"
+              className="bg-white rounded-lg p-4 shadow-[--shadow-sm] border border-dashed border-border hover:border-primary hover:shadow-[--shadow-md] cursor-pointer transition-all flex items-center justify-center min-h-25"
             >
               <div className="text-center">
                 <Plus className="w-8 h-8 text-text-disabled mx-auto mb-1" />

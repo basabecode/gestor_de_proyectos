@@ -205,7 +205,7 @@ export default function SearchPalette() {
       onClick={closeSearch}
     >
       <div
-        className="w-full max-w-[560px] bg-white rounded-xl shadow-[--shadow-dialog] overflow-hidden animate-scale-in"
+        className="w-full max-w-140 bg-white rounded-xl shadow-[--shadow-dialog] overflow-hidden animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Input */}
@@ -229,7 +229,7 @@ export default function SearchPalette() {
         </div>
 
         {/* Results */}
-        <div ref={listRef} className="max-h-[400px] overflow-y-auto py-1">
+        <div ref={listRef} className="max-h-100 overflow-y-auto py-1">
           {flatResults.length === 0 ? (
             <div className="px-4 py-8 text-center">
               <p className="text-[13px] text-text-disabled">

@@ -1116,7 +1116,7 @@ Cobertura objetivo:
 ```
 workos/
 ├── apps/
-│   ├── web/           # React frontend (actual shatter-protektor)
+│   ├── web/           # React frontend (actual gestor-proyectos)
 │   ├── api/           # Fastify backend
 │   └── docs/          # Documentacion (Docusaurus/Nextra)
 ├── packages/

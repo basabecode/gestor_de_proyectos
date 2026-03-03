@@ -35,16 +35,16 @@ export default function Header({
   ];
 
   return (
-    <header className="bg-shatter-primary shadow-lg sticky top-0 z-40">
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="bg-app-primary shadow-lg sticky top-0 z-40">
+      <div className="max-w-350 mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-3 cursor-pointer" onClick={goToDashboard}>
-            <div className="w-9 h-9 bg-shatter-accent rounded-lg flex items-center justify-center">
+            <div className="w-9 h-9 bg-app-accent rounded-lg flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-white font-bold text-lg leading-tight">Shatter Protektor</h1>
+              <h1 className="text-white font-bold text-lg leading-tight">Gestor de Proyectos</h1>
               <p className="text-gray-400 text-[10px]">Gestión de Proyectos</p>
             </div>
           </div>
@@ -60,7 +60,7 @@ export default function Header({
                   onClick={() => setCurrentView(item.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-shatter-accent text-white'
+                      ? 'bg-app-accent text-white'
                       : 'text-gray-300 hover:bg-white/10 hover:text-white'
                   }`}
                 >
@@ -81,7 +81,7 @@ export default function Header({
                 placeholder="Buscar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-40 lg:w-56 pl-9 pr-4 py-2 bg-white/10 border border-white/10 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-shatter-accent focus:border-transparent"
+                className="w-40 lg:w-56 pl-9 pr-4 py-2 bg-white/10 border border-white/10 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-app-accent focus:border-transparent"
               />
             </div>
 
@@ -89,7 +89,7 @@ export default function Header({
             {onNewProject && (
               <button
                 onClick={onNewProject}
-                className="flex items-center gap-1.5 px-3 py-2 bg-shatter-accent hover:bg-shatter-accent/80 text-white rounded-lg text-sm font-medium transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 bg-app-accent hover:bg-app-accent/80 text-white rounded-lg text-sm font-medium transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden lg:inline">Nuevo</span>
@@ -144,15 +144,15 @@ export default function Header({
 
       {/* Breadcrumb */}
       {currentView === 'project' && selectedProject && (
-        <div className="bg-shatter-primary/80 border-t border-white/10">
-          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-2">
+        <div className="bg-app-primary/80 border-t border-white/10">
+          <div className="max-w-350 mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <div className="flex items-center gap-2 text-sm">
               <button onClick={goToDashboard} className="text-gray-400 hover:text-white flex items-center gap-1 transition-colors">
                 <ArrowLeft className="w-4 h-4" />
                 Dashboard
               </button>
               <span className="text-gray-500">/</span>
-              <span className="text-shatter-accent font-medium flex items-center gap-1">
+              <span className="text-app-accent font-medium flex items-center gap-1">
                 <FolderOpen className="w-4 h-4" />
                 {selectedProject.name}
               </span>
@@ -172,7 +172,7 @@ export default function Header({
                 key={item.id}
                 onClick={() => setCurrentView(item.id)}
                 className={`flex flex-col items-center gap-1 px-3 py-1 text-xs ${
-                  isActive ? 'text-shatter-accent' : 'text-gray-400'
+                  isActive ? 'text-app-accent' : 'text-gray-400'
                 }`}
               >
                 <Icon className="w-5 h-5" />

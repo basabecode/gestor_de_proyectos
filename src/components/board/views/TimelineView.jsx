@@ -75,7 +75,7 @@ export default function TimelineView({ board }) {
           <button onClick={() => setBaseDate(viewMode === 'quarter' ? subMonths(baseDate, 3) : subMonths(baseDate, 1))} className="p-1.5 hover:bg-surface-hover rounded">
             <ChevronLeft className="w-4 h-4 text-text-secondary" />
           </button>
-          <h3 className="text-[14px] font-semibold text-text-primary min-w-[180px] text-center capitalize">
+          <h3 className="text-[14px] font-semibold text-text-primary min-w-45 text-center capitalize">
             {viewMode === 'quarter'
               ? `${format(monthStart, 'MMM', { locale: es })} - ${format(monthEnd, 'MMM yyyy', { locale: es })}`
               : format(baseDate, 'MMMM yyyy', { locale: es })
@@ -108,7 +108,7 @@ export default function TimelineView({ board }) {
           {/* Days header */}
           <div className="flex sticky top-0 z-10 bg-white border-b border-border-light">
             {/* Left label column */}
-            <div className="w-[240px] min-w-[240px] px-3 py-2 border-r border-border-light bg-surface-secondary text-[11px] font-semibold text-text-secondary">
+            <div className="w-60 min-w-60 px-3 py-2 border-r border-border-light bg-surface-secondary text-[11px] font-semibold text-text-secondary">
               Elemento
             </div>
             {/* Day columns */}
@@ -144,7 +144,7 @@ export default function TimelineView({ board }) {
             <div key={group.id}>
               {/* Group header */}
               <div className="flex border-b border-border-light bg-surface-secondary/30">
-                <div className="w-[240px] min-w-[240px] px-3 py-1.5 border-r border-border-light flex items-center gap-2">
+                <div className="w-60 min-w-60 px-3 py-1.5 border-r border-border-light flex items-center gap-2">
                   <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: group.color }} />
                   <span className="text-[12px] font-semibold" style={{ color: group.color }}>{group.title}</span>
                   <span className="text-[10px] text-text-disabled">{items.length}</span>
@@ -162,7 +162,7 @@ export default function TimelineView({ board }) {
                 return (
                   <div key={item.id} className="flex border-b border-border-light hover:bg-surface-secondary/30 group/row">
                     {/* Label */}
-                    <div className="w-[240px] min-w-[240px] px-3 py-2 border-r border-border-light flex items-center gap-2">
+                    <div className="w-60 min-w-60 px-3 py-2 border-r border-border-light flex items-center gap-2">
                       {person && <Avatar name={person} size="xs" />}
                       <span className="text-[12px] text-text-primary truncate">{item.title}</span>
                     </div>

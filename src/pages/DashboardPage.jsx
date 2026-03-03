@@ -310,7 +310,7 @@ function StatusPieWidget({ stats }) {
 
   return (
     <div className="flex items-center gap-4">
-      <div className="w-[140px] h-[140px]">
+      <div className="w-35 h-35">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={pieData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" stroke="none">
@@ -436,7 +436,7 @@ function PriorityWidget({ stats }) {
 
   return (
     <div className="flex items-center gap-4">
-      <div className="w-[140px] h-[140px]">
+      <div className="w-35 h-35">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie data={data} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" stroke="none">

@@ -90,10 +90,10 @@ export default function ImportModal({ onImport, onClose }) {
             onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
               dragOver
-                ? 'border-shatter-accent bg-shatter-accent/5 scale-[1.02]'
+                ? 'border-app-accent bg-app-accent/5 scale-[1.02]'
                 : selectedFile && preview
                 ? 'border-emerald-300 bg-emerald-50'
-                : 'border-gray-300 hover:border-shatter-accent hover:bg-gray-50'
+                : 'border-gray-300 hover:border-app-accent hover:bg-gray-50'
             }`}
           >
             {selectedFile && preview ? (
@@ -109,7 +109,7 @@ export default function ImportModal({ onImport, onClose }) {
                 </div>
                 <button
                   onClick={(e) => { e.stopPropagation(); setSelectedFile(null); setPreview(null); }}
-                  className="text-sm text-shatter-accent hover:underline"
+                  className="text-sm text-app-accent hover:underline"
                 >
                   Cambiar archivo
                 </button>
@@ -220,7 +220,7 @@ export default function ImportModal({ onImport, onClose }) {
           <button
             onClick={handleImport}
             disabled={!selectedFile || !preview || loading}
-            className="flex items-center gap-2 px-6 py-2.5 bg-shatter-accent hover:bg-shatter-accent/80 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex items-center gap-2 px-6 py-2.5 bg-app-accent hover:bg-app-accent/80 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
           >
             {loading ? (
               <>

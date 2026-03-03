@@ -163,7 +163,7 @@ export default function GroupSection({ board, group, items = [], columns = [], l
         {showColorPicker && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setShowColorPicker(false)} />
-            <div className="absolute ml-32 mt-8 bg-white rounded-lg shadow-lg border border-border-light p-2 z-20 flex gap-1 flex-wrap w-[140px]">
+            <div className="absolute ml-32 mt-8 bg-white rounded-lg shadow-lg border border-border-light p-2 z-20 flex gap-1 flex-wrap w-35">
               {GROUP_COLORS.map((color) => (
                 <button
                   key={color}
@@ -188,7 +188,7 @@ export default function GroupSection({ board, group, items = [], columns = [], l
             <div className="w-8 px-2 py-2.5 flex items-center justify-center cell-border shrink-0">
               <input type="checkbox" className="rounded" disabled />
             </div>
-            <div className="flex-1 min-w-[200px] md:min-w-[250px] px-3 py-2.5 cell-border">Elemento</div>
+            <div className="flex-1 min-w-50 md:min-w-62.5 px-3 py-2.5 cell-border">Elemento</div>
             {columns.map((col) => (
               <div
                 key={col.id}
@@ -237,7 +237,7 @@ export default function GroupSection({ board, group, items = [], columns = [], l
           <div className="flex items-center border-t border-border-light min-w-fit">
             <div className="group-indicator" style={{ backgroundColor: group.color, opacity: 0.4 }} />
             <div className="w-8 shrink-0" />
-            <div className="flex-1 min-w-[200px] px-3 py-1.5">
+            <div className="flex-1 min-w-50 px-3 py-1.5">
               {showAddRow ? (
                 <div className="flex items-center gap-2">
                   <input

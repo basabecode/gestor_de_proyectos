@@ -153,7 +153,7 @@ export default function BoardRow({ board, item, columns, groupColor, sortable, l
       </div>
 
       {/* Title */}
-      <div className="flex-1 min-w-[250px] px-3 py-2 cell-border">
+      <div className="flex-1 min-w-62.5 px-3 py-2 cell-border">
         {editingTitle ? (
           <input
             autoFocus

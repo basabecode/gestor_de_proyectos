@@ -3,8 +3,8 @@
 
 @theme {
   /* Brand colors */
-  --color-shatter-primary: #181B34;
-  --color-shatter-accent: #6161FF;
+  --color-app-primary: #181B34;
+  --color-app-accent: #6161FF;
 
   /* Work OS palette */
   --color-primary: #00c875;

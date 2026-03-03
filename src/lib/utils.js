@@ -26,6 +26,14 @@ export function formatRelativeDate(date) {
   return formatDistanceToNow(d, { addSuffix: true, locale: es });
 }
 
+const SHORT_MONTHS_ES = ['ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.', 'jul.', 'ago.', 'sep.', 'oct.', 'nov.', 'dic.'];
+
+export function formatShortDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T12:00:00');
+  return `${SHORT_MONTHS_ES[d.getMonth()]} ${d.getDate()}`;
+}
+
 export function getDateSemaphore(dateStr) {
   if (!dateStr) return 'none';
   const date = new Date(dateStr);

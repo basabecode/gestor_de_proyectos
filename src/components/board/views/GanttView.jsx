@@ -81,7 +81,7 @@ export default function GanttView({ board }) {
           <button onClick={() => setBaseDate(subMonths(baseDate, 1))} className="p-1.5 hover:bg-surface-hover rounded">
             <ChevronLeft className="w-4 h-4 text-text-secondary" />
           </button>
-          <h3 className="text-[14px] font-semibold text-text-primary min-w-[200px] text-center capitalize">
+          <h3 className="text-[14px] font-semibold text-text-primary min-w-50 text-center capitalize">
             {format(rangeStart, 'MMM', { locale: es })} - {format(rangeEnd, 'MMM yyyy', { locale: es })}
           </h3>
           <button onClick={() => setBaseDate(addMonths(baseDate, 1))} className="p-1.5 hover:bg-surface-hover rounded">
@@ -106,7 +106,7 @@ export default function GanttView({ board }) {
         <div style={{ minWidth: days.length * DAY_WIDTH + 280 }}>
           {/* Week header */}
           <div className="flex sticky top-0 z-10 bg-white">
-            <div className="w-[280px] min-w-[280px] border-r border-b border-border-light bg-surface-secondary" />
+            <div className="w-70 min-w-70 border-r border-b border-border-light bg-surface-secondary" />
             <div className="flex border-b border-border-light">
               {weeks.map((weekStart) => {
                 const weekDays = eachDayOfInterval({
@@ -128,10 +128,10 @@ export default function GanttView({ board }) {
 
           {/* Day numbers header */}
           <div className="flex sticky top-[25px] z-10 bg-white">
-            <div className="w-[280px] min-w-[280px] border-r border-b border-border-light bg-white flex">
+            <div className="w-70 min-w-70 border-r border-b border-border-light bg-white flex">
               <div className="flex-1 px-3 py-1 text-[10px] font-semibold text-text-secondary">Elemento</div>
-              <div className="w-[60px] px-2 py-1 text-[10px] font-semibold text-text-secondary text-center">Estado</div>
-              <div className="w-[50px] px-2 py-1 text-[10px] font-semibold text-text-secondary text-center">%</div>
+              <div className="w-15 px-2 py-1 text-[10px] font-semibold text-text-secondary text-center">Estado</div>
+              <div className="w-12.5 px-2 py-1 text-[10px] font-semibold text-text-secondary text-center">%</div>
             </div>
             <div className="flex border-b border-border-light">
               {days.map((day) => {
@@ -161,7 +161,7 @@ export default function GanttView({ board }) {
             <div key={group.id}>
               {/* Group row */}
               <div className="flex border-b border-border-light bg-surface-secondary/30">
-                <div className="w-[280px] min-w-[280px] px-3 py-1.5 border-r border-border-light flex items-center gap-2">
+                <div className="w-70 min-w-70 px-3 py-1.5 border-r border-border-light flex items-center gap-2">
                   <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: group.color }} />
                   <span className="text-[12px] font-bold" style={{ color: group.color }}>{group.title}</span>
                 </div>
@@ -175,14 +175,14 @@ export default function GanttView({ board }) {
                 return (
                   <div key={item.id} className="flex border-b border-border-light hover:bg-surface-secondary/20">
                     {/* Left info */}
-                    <div className="w-[280px] min-w-[280px] border-r border-border-light flex items-center">
+                    <div className="w-70 min-w-70 border-r border-border-light flex items-center">
                       <div className="flex-1 px-3 py-1.5 flex items-center gap-1.5 min-w-0">
                         {item.isDone && <CheckCircle2 className="w-3.5 h-3.5 text-status-green shrink-0" />}
                         <span className={cn('text-[12px] truncate', item.isDone && 'line-through text-text-disabled')}>
                           {item.title}
                         </span>
                       </div>
-                      <div className="w-[60px] flex justify-center">
+                      <div className="w-15 flex justify-center">
                         <span
                           className="text-[9px] font-semibold text-white px-1.5 py-0.5 rounded-sm"
                           style={{ backgroundColor: barColor }}
@@ -190,7 +190,7 @@ export default function GanttView({ board }) {
                           {STATUS_LABELS[item.status]?.slice(0, 4)}
                         </span>
                       </div>
-                      <div className="w-[50px] text-center text-[11px] text-text-secondary font-medium">
+                      <div className="w-12.5 text-center text-[11px] text-text-secondary font-medium">
                         {item.progress}%
                       </div>
                     </div>

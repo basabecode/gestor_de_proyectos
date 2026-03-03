@@ -315,7 +315,7 @@ export default function BoardView({ board }) {
             {showFilters && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowFilters(false)} />
-                <div className="absolute right-0 mt-1 w-52 bg-white rounded-lg shadow-lg border border-border-light py-1 z-20 animate-slide-down max-h-[400px] overflow-y-auto">
+                <div className="absolute right-0 mt-1 w-52 bg-white rounded-lg shadow-lg border border-border-light py-1 z-20 animate-slide-down max-h-100 overflow-y-auto">
                   <p className="px-3 py-1.5 text-[10px] font-semibold text-text-disabled uppercase">Estado</p>
                   {Object.entries(STATUS_LABELS).map(([key, label]) => (
                     <button

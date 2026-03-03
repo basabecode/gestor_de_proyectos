@@ -119,7 +119,7 @@ export default function Calendar({ projects }) {
             {calendarDays.map((cell, idx) => {
               if (!cell.isCurrentMonth) {
                 return (
-                  <div key={idx} className="min-h-[80px] p-1.5 border-b border-r border-gray-50 bg-gray-50/50">
+                  <div key={idx} className="min-h-20 p-1.5 border-b border-r border-gray-50 bg-gray-50/50">
                     <span className="text-xs text-gray-300">{cell.day}</span>
                   </div>
                 );
@@ -131,15 +131,15 @@ export default function Calendar({ projects }) {
               return (
                 <div
                   key={idx}
-                  className={`min-h-[80px] p-1.5 border-b border-r border-gray-100 ${
-                    isToday(cell.day) ? 'bg-shatter-accent/5' : ''
+                  className={`min-h-20 p-1.5 border-b border-r border-gray-100 ${
+                    isToday(cell.day) ? 'bg-app-accent/5' : ''
                   } ${events.holiday ? 'bg-red-50/50' : ''}`}
                 >
                   <div className="flex items-center justify-between">
                     <span
                       className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${
                         isToday(cell.day)
-                          ? 'bg-shatter-accent text-white'
+                          ? 'bg-app-accent text-white'
                           : isSunday
                           ? 'text-red-400'
                           : 'text-gray-700'
@@ -163,7 +163,7 @@ export default function Calendar({ projects }) {
                         className={`text-[10px] px-1 py-0.5 rounded truncate font-medium ${
                           t.completed
                             ? 'bg-green-100 text-green-700'
-                            : 'bg-shatter-accent/10 text-shatter-accent'
+                            : 'bg-app-accent/10 text-app-accent'
                         }`}
                       >
                         {t.title}
@@ -194,7 +194,7 @@ export default function Calendar({ projects }) {
         <div className="space-y-4">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
             <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-4">
-              <CalendarDays className="w-5 h-5 text-shatter-accent" />
+              <CalendarDays className="w-5 h-5 text-app-accent" />
               Próximos Festivos
             </h3>
             <div className="space-y-3">
@@ -225,7 +225,7 @@ export default function Calendar({ projects }) {
             <div className="space-y-2">
               {[
                 { color: 'bg-red-100', text: 'Festivo colombiano' },
-                { color: 'bg-shatter-accent/20', text: 'Tarea pendiente' },
+                { color: 'bg-app-accent/20', text: 'Tarea pendiente' },
                 { color: 'bg-green-100', text: 'Tarea completada' },
                 { color: 'bg-blue-100', text: 'Inicio/Fin proyecto' },
               ].map((item) => (

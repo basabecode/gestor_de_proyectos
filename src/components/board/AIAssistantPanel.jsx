@@ -78,7 +78,7 @@ export default function AIAssistantPanel({ board, onClose }) {
       />
 
       {/* Panel */}
-      <div className="fixed right-0 top-0 h-full w-full sm:w-[380px] bg-white border-l border-border-light shadow-2xl z-40 flex flex-col animate-slide-in-right">
+      <div className="fixed right-0 top-0 h-full w-full sm:w-95 bg-white border-l border-border-light shadow-2xl z-40 flex flex-col animate-slide-in-right">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border-light bg-gradient-to-r from-primary/5 to-transparent shrink-0">
           <div className="flex items-center gap-2.5">
@@ -123,7 +123,7 @@ export default function AIAssistantPanel({ board, onClose }) {
               <p className="text-[14px] font-semibold text-text-primary mb-1">
                 ¿En qué te ayudo?
               </p>
-              <p className="text-[12px] text-text-secondary max-w-[260px] mx-auto leading-relaxed">
+              <p className="text-[12px] text-text-secondary max-w-65 mx-auto leading-relaxed">
                 Analizo el estado de tu proyecto y te ayudo a tomar mejores
                 decisiones.
               </p>
@@ -243,7 +243,7 @@ function MessageBubble({ role, content, streaming = false }) {
       {/* Bubble */}
       <div
         className={cn(
-          'rounded-lg px-3 py-2 max-w-[280px] text-[12px] leading-relaxed',
+          'rounded-lg px-3 py-2 max-w-70 text-[12px] leading-relaxed',
           isUser
             ? 'bg-primary text-white rounded-tr-none'
             : 'bg-surface-secondary text-text-primary rounded-tl-none',

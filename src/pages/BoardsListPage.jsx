@@ -113,7 +113,7 @@ export default function BoardsListPage() {
             })}
             <div
               onClick={() => openModal('createBoard')}
-              className="bg-white rounded-lg p-4 shadow-[--shadow-sm] border border-dashed border-border hover:border-primary hover:shadow-[--shadow-md] cursor-pointer transition-all flex items-center justify-center min-h-[140px]"
+              className="bg-white rounded-lg p-4 shadow-[--shadow-sm] border border-dashed border-border hover:border-primary hover:shadow-[--shadow-md] cursor-pointer transition-all flex items-center justify-center min-h-35"
             >
               <div className="text-center">
                 <Plus className="w-8 h-8 text-text-disabled mx-auto mb-1" />
@@ -128,14 +128,14 @@ export default function BoardsListPage() {
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow-[--shadow-sm] border border-border-light overflow-hidden board-table-scroll">
-            <table className="w-full min-w-[640px]">
+            <table className="w-full min-w-160">
               <thead>
                 <tr className="bg-surface-secondary border-b border-border-light">
                   <th className="text-left text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3">Nombre</th>
-                  <th className="text-center text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3 w-[100px]">Elementos</th>
-                  <th className="text-center text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3 w-[100px]">Grupos</th>
-                  <th className="text-center text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3 w-[120px]">Progreso</th>
-                  <th className="text-center text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3 w-[140px]">Actualizado</th>
+                  <th className="text-center text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3 w-25">Elementos</th>
+                  <th className="text-center text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3 w-25">Grupos</th>
+                  <th className="text-center text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3 w-30">Progreso</th>
+                  <th className="text-center text-[11px] font-semibold text-text-secondary uppercase tracking-wider px-4 py-3 w-35">Actualizado</th>
                   <th className="w-10"></th>
                 </tr>
               </thead>
@@ -156,7 +156,7 @@ export default function BoardsListPage() {
                           <div>
                             <span className="text-[14px] font-medium text-text-primary">{board.name}</span>
                             {board.description && (
-                              <p className="text-[12px] text-text-secondary mt-0.5 truncate max-w-[300px]">{board.description}</p>
+                              <p className="text-[12px] text-text-secondary mt-0.5 truncate max-w-75">{board.description}</p>
                             )}
                           </div>
                         </div>

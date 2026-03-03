@@ -20,7 +20,7 @@ Sistema completo de gestion de proyectos estilo Monday.com, construido con React
 
 ```bash
 # Clonar e instalar
-cd shatter-protektor
+cd gestor-proyectos
 npm install --legacy-peer-deps
 
 # Desarrollo

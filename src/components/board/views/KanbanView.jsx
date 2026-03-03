@@ -214,7 +214,7 @@ function KanbanColumn({ status, items, board, color, label, wipLimit, onAddItem,
     : 'bg-surface-secondary/50';
 
   return (
-    <div className={cn('flex flex-col w-[280px] min-w-[280px] max-h-full rounded-xl transition-colors', columnBg)}>
+    <div className={cn('flex flex-col w-70 min-w-70 max-h-full rounded-xl transition-colors', columnBg)}>
       {/* Column header */}
       <div className="flex items-center gap-2 px-3 py-2.5 mb-1">
         <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: color }} />
@@ -441,7 +441,7 @@ export default function KanbanView({ board, activeLens = 'none' }) {
 
       <DragOverlay>
         {activeItem && (
-          <div className="bg-white rounded-lg border border-border-light p-3 shadow-[--shadow-lg] w-[260px] rotate-2">
+          <div className="bg-white rounded-lg border border-border-light p-3 shadow-[--shadow-lg] w-65 rotate-2">
             <p className="text-[13px] font-medium text-text-primary">{activeItem.title}</p>
           </div>
         )}

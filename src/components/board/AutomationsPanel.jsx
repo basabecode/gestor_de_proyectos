@@ -108,7 +108,7 @@ export default function AutomationsPanel({ open, onClose, board }) {
               </button>
             </div>
           ) : (
-            <div className="space-y-2 max-h-[350px] overflow-y-auto">
+            <div className="space-y-2 max-h-87.5 overflow-y-auto">
               {automations.map((auto) => (
                 <div key={auto.id} className="border border-border-light rounded-lg p-3 hover:bg-surface-secondary/30 transition-colors">
                   <div className="flex items-center gap-2 mb-2">
@@ -388,7 +388,7 @@ export default function AutomationsPanel({ open, onClose, board }) {
               <p className="text-[13px] text-text-disabled">Sin historial de ejecuciones</p>
             </div>
           ) : (
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            <div className="space-y-2 max-h-100 overflow-y-auto">
               {logs.map((log) => (
                 <div key={log.id} className="flex items-start gap-2.5 p-2.5 rounded-lg hover:bg-surface-secondary/30">
                   <div className="w-6 h-6 rounded-full bg-status-yellow-light flex items-center justify-center shrink-0 mt-0.5">

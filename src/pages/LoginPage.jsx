@@ -18,7 +18,7 @@ import toast from 'react-hot-toast'
 function GoogleIcon() {
   return (
     <svg
-      className="w-[18px] h-[18px] flex-shrink-0"
+      className="w-4.5 h-4.5 shrink-0"
       viewBox="0 0 24 24"
       aria-hidden="true"
     >
@@ -95,6 +95,7 @@ export default function LoginPage() {
         errs.confirm = 'Las contraseñas no coinciden'
     }
     if (!form.email.trim()) errs.email = 'Email requerido'
+    if (!form.password.trim()) errs.password = 'Contraseña requerida'
     setFieldErrors(errs)
     return Object.keys(errs).length === 0
   }
@@ -157,14 +158,14 @@ export default function LoginPage() {
       >
         {/* Glows */}
         <div
-          className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full pointer-events-none"
+          className="absolute -top-32 -right-32 w-105 h-105 rounded-full pointer-events-none"
           style={{
             background:
               'radial-gradient(circle, rgba(16,185,129,0.16) 0%, transparent 70%)',
           }}
         />
         <div
-          className="absolute -bottom-24 -left-24 w-[320px] h-[320px] rounded-full pointer-events-none"
+          className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full pointer-events-none"
           style={{
             background:
               'radial-gradient(circle, rgba(16,185,129,0.07) 0%, transparent 70%)',
@@ -173,14 +174,14 @@ export default function LoginPage() {
 
         {/* Franja de acento */}
         <div
-          className="absolute top-0 left-0 right-0 h-[2px] z-20"
+          className="absolute top-0 left-0 right-0 h-0.5 z-20"
           style={{
             background: 'linear-gradient(90deg, #10b981, #34d399, #10b981)',
           }}
         />
 
         {/* ── MÓVIL: hero con imagen de fondo y tagline ────────────────── */}
-        <div className="lg:hidden relative flex flex-col h-[280px] sm:h-[340px] overflow-hidden">
+        <div className="lg:hidden relative flex flex-col h-70 sm:h-85 overflow-hidden">
           {/* Imagen de fondo solo en móvil */}
           <img
             src="/vertical_gestion_proyectos2.jpeg"

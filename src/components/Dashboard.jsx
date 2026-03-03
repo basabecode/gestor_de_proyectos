@@ -351,7 +351,7 @@ export default function Dashboard({
                     {/* Accent line — 3px left indicator colored by status */}
                     <td className="p-0 w-[3px]">
                       <div
-                        className="w-full h-full min-h-[52px]"
+                        className="w-full h-full min-h-13"
                         style={{ background: cfg.color, opacity: 0.7 }}
                       />
                     </td>
@@ -366,7 +366,7 @@ export default function Dashboard({
                       </span>
                       {project.description && (
                         <p
-                          className="text-[11px] mt-0.5 truncate max-w-[280px]"
+                          className="text-[11px] mt-0.5 truncate max-w-70"
                           style={{ color: 'var(--color-text-disabled)' }}
                         >
                           {project.description}
@@ -394,7 +394,7 @@ export default function Dashboard({
                     <td className="px-3 py-3">
                       <div className="flex flex-col items-center gap-1.5">
                         <div
-                          className="w-full max-w-[80px] h-[3px] rounded-full overflow-hidden"
+                          className="w-full max-w-20 h-[3px] rounded-full overflow-hidden"
                           style={{ background: 'rgba(0,0,0,0.08)' }}
                         >
                           <div

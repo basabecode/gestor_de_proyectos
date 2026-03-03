@@ -372,7 +372,7 @@ export default function RiskPanel({ board, onClose }) {
   };
 
   return (
-    <div className="fixed right-0 top-0 h-full w-[420px] bg-white shadow-xl border-l border-border-light flex flex-col z-40 animate-slide-in-right">
+    <div className="fixed right-0 top-0 h-full w-105 bg-white shadow-xl border-l border-border-light flex flex-col z-40 animate-slide-in-right">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border-light shrink-0">
         <div className="flex items-center gap-2">

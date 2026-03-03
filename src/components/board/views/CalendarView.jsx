@@ -53,7 +53,7 @@ export default function CalendarView({ board }) {
           >
             <ChevronLeft className="w-5 h-5 text-text-secondary" />
           </button>
-          <h2 className="text-[16px] font-semibold text-text-primary capitalize min-w-[160px] text-center">
+          <h2 className="text-[16px] font-semibold text-text-primary capitalize min-w-40 text-center">
             {format(currentDate, 'MMMM yyyy', { locale: es })}
           </h2>
           <button
@@ -105,7 +105,7 @@ export default function CalendarView({ board }) {
             return (
               <div
                 key={dateKey}
-                className={`min-h-[90px] border-b border-r border-border-light p-1 ${
+                className={`min-h-22.5 border-b border-r border-border-light p-1 ${
                   !inMonth ? 'bg-surface-secondary/50' : ''
                 } ${holiday ? 'bg-status-red-light/30' : ''} ${isSunday ? 'bg-surface-secondary/30' : ''}`}
               >

@@ -1,4 +1,4 @@
-# Shatter Protektor - Implementation Report
+# Gestor de Proyectos - Implementation Report
 
 ## Architecture
 
@@ -132,7 +132,7 @@ src/
 ## How to Run
 
 ```bash
-cd shatter-protektor
+cd gestor-proyectos
 npm install
 npm run dev
 # Opens at http://localhost:3000

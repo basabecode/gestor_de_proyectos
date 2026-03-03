@@ -72,7 +72,7 @@ export const exportToCSV = (projects) => {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `shatter-protektor-${new Date().toISOString().split('T')[0]}.csv`;
+  link.download = `gestor-proyectos-${new Date().toISOString().split('T')[0]}.csv`;
   link.click();
   window.URL.revokeObjectURL(url);
 };
@@ -139,7 +139,7 @@ export const exportToExcel = async (projects) => {
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Proyectos');
 
   // Descargar archivo
-  XLSX.writeFile(workbook, `shatter-protektor-${new Date().toISOString().split('T')[0]}.xlsx`);
+  XLSX.writeFile(workbook, `gestor-proyectos-${new Date().toISOString().split('T')[0]}.xlsx`);
 };
 
 /**

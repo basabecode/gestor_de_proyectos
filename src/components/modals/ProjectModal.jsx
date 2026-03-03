@@ -61,8 +61,8 @@ export default function ProjectModal({ project, onSave, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-shatter-accent/10 rounded-xl flex items-center justify-center">
-              {isEdit ? <Edit3 className="w-5 h-5 text-shatter-accent" /> : <FolderPlus className="w-5 h-5 text-shatter-accent" />}
+            <div className="w-10 h-10 bg-app-accent/10 rounded-xl flex items-center justify-center">
+              {isEdit ? <Edit3 className="w-5 h-5 text-app-accent" /> : <FolderPlus className="w-5 h-5 text-app-accent" />}
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900">
@@ -93,7 +93,7 @@ export default function ProjectModal({ project, onSave, onClose }) {
               value={form.name}
               onChange={(e) => handleChange('name', e.target.value)}
               placeholder="Ej: Rediseño del sitio web"
-              className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-shatter-accent transition-colors ${
+              className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-app-accent transition-colors ${
                 errors.name ? 'border-rose-400 bg-rose-50' : 'border-gray-300'
               }`}
               autoFocus
@@ -108,7 +108,7 @@ export default function ProjectModal({ project, onSave, onClose }) {
               onChange={(e) => handleChange('description', e.target.value)}
               placeholder="Describe brevemente el proyecto..."
               rows={3}
-              className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-shatter-accent resize-none transition-colors ${
+              className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-app-accent resize-none transition-colors ${
                 errors.description ? 'border-rose-400 bg-rose-50' : 'border-gray-300'
               }`}
             />
@@ -125,7 +125,7 @@ export default function ProjectModal({ project, onSave, onClose }) {
                 type="date"
                 value={form.startDate}
                 onChange={(e) => handleChange('startDate', e.target.value)}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-shatter-accent"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-app-accent"
               />
             </div>
             <div>
@@ -135,7 +135,7 @@ export default function ProjectModal({ project, onSave, onClose }) {
                 value={form.endDate}
                 onChange={(e) => handleChange('endDate', e.target.value)}
                 min={form.startDate}
-                className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-shatter-accent ${
+                className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-app-accent ${
                   errors.endDate ? 'border-rose-400 bg-rose-50' : 'border-gray-300'
                 }`}
               />
@@ -180,7 +180,7 @@ export default function ProjectModal({ project, onSave, onClose }) {
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-2.5 bg-shatter-accent hover:bg-shatter-accent/80 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
+            className="flex items-center gap-2 px-6 py-2.5 bg-app-accent hover:bg-app-accent/80 disabled:opacity-50 text-white text-sm font-medium rounded-lg transition-colors"
           >
             {saving ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

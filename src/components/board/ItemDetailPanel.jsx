@@ -181,7 +181,7 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
       <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} />
 
       {/* Panel */}
-      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-[560px] bg-white shadow-[-4px_0_20px_rgba(0,0,0,0.1)] flex flex-col animate-slide-left">
+      <div className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-140 bg-white shadow-[-4px_0_20px_rgba(0,0,0,0.1)] flex flex-col animate-slide-left">
         {/* Header */}
         <div className="px-5 py-4 border-b border-border-light flex items-center gap-3">
           <div className="w-1 h-8 rounded-full" style={{ backgroundColor: group?.color || '#579bfc' }} />
@@ -314,7 +314,7 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
                     onChange={handleCommentChange}
                     onKeyDown={handleCommentKeyDown}
                     placeholder="Escribe una actualización... (usa @ para mencionar)"
-                    className="w-full px-3 py-2.5 text-[13px] rounded-t-lg resize-none focus:outline-none min-h-[80px]"
+                    className="w-full px-3 py-2.5 text-[13px] rounded-t-lg resize-none focus:outline-none min-h-20"
                     rows={3}
                   />
                   <div className="flex items-center justify-between px-3 py-1.5 border-t border-border-light bg-surface-secondary/30 rounded-b-lg">
@@ -353,7 +353,7 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
                 {showMentions && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowMentions(false)} />
-                    <div className="absolute left-0 bottom-full mb-1 w-48 bg-white rounded-lg shadow-lg border border-border-light py-1 z-20 max-h-[200px] overflow-auto">
+                    <div className="absolute left-0 bottom-full mb-1 w-48 bg-white rounded-lg shadow-lg border border-border-light py-1 z-20 max-h-50 overflow-auto">
                       <p className="px-3 py-1 text-[10px] font-semibold text-text-disabled uppercase">Mencionar a</p>
                       {filteredMembers.map((member) => (
                         <button
@@ -505,7 +505,7 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
                     {activityLog.map((entry) => (
                       <div key={entry.id} className="flex items-start gap-3 relative">
                         <div className={cn(
-                          'w-[22px] h-[22px] rounded-full flex items-center justify-center z-[1] shrink-0',
+                          'w-5.5 h-5.5 rounded-full flex items-center justify-center z-[1] shrink-0',
                           entry.type === 'comment' ? 'bg-primary/10' :
                           entry.type === 'attachment' ? 'bg-status-orange-light' :
                           entry.type === 'field_change' ? 'bg-status-green-light' :

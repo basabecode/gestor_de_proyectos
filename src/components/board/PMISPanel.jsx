@@ -141,7 +141,7 @@ export default function PMISPanel({ board, onClose }) {
       />
 
       {/* Panel */}
-      <div className="fixed right-0 top-0 h-full w-full sm:w-[380px] bg-white border-l border-border-light shadow-2xl z-40 flex flex-col animate-slide-in-right overflow-hidden">
+      <div className="fixed right-0 top-0 h-full w-full sm:w-95 bg-white border-l border-border-light shadow-2xl z-40 flex flex-col animate-slide-in-right overflow-hidden">
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border-light shrink-0">

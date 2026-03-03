@@ -87,7 +87,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Desktop sidebar */}
-        <div className="hidden md:block w-[220px] bg-white border-r border-border-light p-3 shrink-0 overflow-y-auto">
+        <div className="hidden md:block w-55 bg-white border-r border-border-light p-3 shrink-0 overflow-y-auto">
           <nav className="space-y-0.5">
             {TABS.map((tab) => {
               const Icon = tab.icon;
@@ -112,7 +112,7 @@ export default function SettingsPage() {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6">
-          <div className="max-w-[700px]">
+          <div className="max-w-175">
             {activeTab === 'profile' && <ProfileSection />}
             {activeTab === 'team' && <TeamSection />}
             {activeTab === 'preferences' && <PreferencesSection />}
@@ -657,14 +657,14 @@ function ToggleSwitch({ checked, onChange, disabled = false }) {
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
       className={cn(
-        'w-10 h-[22px] rounded-full transition-colors relative',
+        'w-10 h-5.5 rounded-full transition-colors relative',
         checked ? 'bg-primary' : 'bg-gray-300',
         disabled && 'opacity-40 cursor-not-allowed'
       )}
     >
       <div
         className={cn(
-          'absolute top-[2px] w-[18px] h-[18px] bg-white rounded-full shadow transition-transform',
+          'absolute top-[2px] w-4.5 h-4.5 bg-white rounded-full shadow transition-transform',
           checked ? 'translate-x-[20px]' : 'translate-x-[2px]'
         )}
       />

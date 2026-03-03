@@ -1,7 +1,7 @@
 // Para desarrollo local - usa localStorage
 // En producción con Claude, esto se reemplaza con window.storage
 
-const STORAGE_KEY = 'shatter-projects';
+const STORAGE_KEY = 'app-projects';
 
 export const storage = {
   async get(key) {

@@ -5,56 +5,89 @@ const useAuthStore = create((set, get) => ({
   session:  null,
   user:     null,
   profile:  null,
-  loading:  true,   // true hasta que initialize() termine
+  loading:  true,   // true hasta que conozcamos el estado de sesión inicial
   ready:    false,  // true cuando _onSignedIn completó (workspace + perfil listos)
   error:    null,
 
   initialize: async () => {
+    // IMPORTANT: register the listener FIRST, before getSession().
+    // Supabase fires INITIAL_SESSION synchronously from localStorage when the
+    // listener is registered, so if we registered it after _onSignedIn we'd
+    // get a double-fire that resets ready→false and repeats all DB queries.
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      const user = session?.user ?? null
+
+      // Silent token refresh — only update the session object, no reload
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        set({ session })
+        return
+      }
+
+      if (event === 'SIGNED_OUT') {
+        set({ session: null, user: null, loading: false, ready: false })
+        get()._onSignedOut()
+        return
+      }
+
+      // INITIAL_SESSION / SIGNED_IN
+      // Guard: same user already loaded → just refresh the session token
+      const { user: currentUser, ready } = get()
+      if (user?.id && user.id === currentUser?.id && ready) {
+        set({ session, loading: false })
+        return
+      }
+
+      set({ session, user, loading: false, ready: false })
+      if (user) await get()._onSignedIn(user)
+    })
+
+    // Validate session server-side. INITIAL_SESSION from the listener above
+    // handles setting loading:false for us; this is just a safety net.
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const user = session?.user ?? null
-      set({ session, user, loading: false })
-      if (user) await get()._onSignedIn(user)
+      if (!session) set({ loading: false })
     } catch {
       set({ loading: false })
     }
-
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      const user = session?.user ?? null
-      // Siempre actualizar sesión inmediatamente
-      set({ session, user, ready: false })
-      if (user) {
-        await get()._onSignedIn(user)
-      } else {
-        get()._onSignedOut()
-      }
-    })
   },
 
   _onSignedIn: async (user) => {
     try {
-      await get().fetchProfile(user.id)
+      // Parallel: fetch profile + dynamic-import all stores at once
+      const [
+        ,
+        { default: useUserStore },
+        { default: useWorkspaceStore },
+        { default: useOrganizationStore },
+        { default: useLicenseStore },
+      ] = await Promise.all([
+        get().fetchProfile(user.id),
+        import('./userStore'),
+        import('./workspaceStore'),
+        import('./organizationStore'),
+        import('./licenseStore'),
+      ])
+
       const profile = get().profile
-
-      const { default: useUserStore }        = await import('./userStore')
-      const { default: useWorkspaceStore }   = await import('./workspaceStore')
-      const { default: useOrganizationStore} = await import('./organizationStore')
-      const { default: useLicenseStore }     = await import('./licenseStore')
-
       useUserStore.getState().syncFromProfile(profile)
 
-      await useWorkspaceStore.getState().fetchWorkspaces()
-      const ws = await useWorkspaceStore.getState().ensureDefaultWorkspace()
-      if (ws?.id) useUserStore.getState().fetchTeamMembers(ws.id)
-
-      // Cargar organización y licencia
       const orgId = profile?.organization_id
-      if (orgId) {
-        await Promise.all([
-          useOrganizationStore.getState().fetchOrganization(orgId),
-          useLicenseStore.getState().fetchLicense(orgId),
-        ])
-      }
+
+      // Parallel: workspace chain (fetchWorkspaces → ensureDefault)
+      //           + org/license fetches (both need orgId from profile)
+      const [ws] = await Promise.all([
+        useWorkspaceStore.getState()
+          .fetchWorkspaces()
+          .then(() => useWorkspaceStore.getState().ensureDefaultWorkspace()),
+        orgId
+          ? Promise.all([
+              useOrganizationStore.getState().fetchOrganization(orgId),
+              useLicenseStore.getState().fetchLicense(orgId),
+            ])
+          : Promise.resolve(),
+      ])
+
+      if (ws?.id) useUserStore.getState().fetchTeamMembers(ws.id)
     } catch (err) {
       console.error('[authStore] _onSignedIn error:', err)
     } finally {
@@ -85,7 +118,6 @@ const useAuthStore = create((set, get) => ({
     if (!error && data) set({ profile: data })
   },
 
-  // Espera a que haya sesión activa (útil en LoginPage)
   signIn: async (email, password) => {
     set({ error: null })
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })

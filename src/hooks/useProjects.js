@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const STORAGE_KEY = 'shatter-projects';
+const STORAGE_KEY = 'app-projects';
 
 function loadFromStorage() {
   try {

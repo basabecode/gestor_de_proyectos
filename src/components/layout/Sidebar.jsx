@@ -64,7 +64,7 @@ export default function Sidebar({ onNavigate }) {
     <aside
       className={cn(
         'h-full flex flex-col bg-sidebar-bg text-sidebar-text transition-all duration-200 shrink-0',
-        sidebarCollapsed ? 'w-[52px]' : 'w-[260px]'
+        sidebarCollapsed ? 'w-13' : 'w-65'
       )}
     >
       {/* Logo */}
@@ -133,7 +133,7 @@ export default function Sidebar({ onNavigate }) {
               />
               {!sidebarCollapsed && <span>{item.label}</span>}
               {item.id === 'inbox' && unreadCount > 0 && (
-                <span className="ml-auto text-[9px] font-bold bg-status-red text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                <span className="ml-auto text-[9px] font-bold bg-status-red text-white px-1.5 py-0.5 rounded-full min-w-4.5 text-center">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
@@ -302,7 +302,7 @@ export default function Sidebar({ onNavigate }) {
             title="Cerrar sesión"
             className="w-full flex items-center justify-center px-3 py-2 rounded-md text-sidebar-text/60 hover:bg-sidebar-hover hover:text-sidebar-text transition-colors"
           >
-            <LogOut className="w-[18px] h-[18px]" />
+            <LogOut className="w-4.5 h-4.5" />
           </button>
         )}
       </div>

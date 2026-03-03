@@ -216,7 +216,7 @@ export default function PortfolioPage() {
             {/* Add card */}
             <div
               onClick={() => setShowCreate(true)}
-              className="bg-white rounded-xl p-5 shadow-[--shadow-sm] border border-dashed border-border hover:border-primary hover:shadow-[--shadow-md] cursor-pointer transition-all flex items-center justify-center min-h-[140px]"
+              className="bg-white rounded-xl p-5 shadow-[--shadow-sm] border border-dashed border-border hover:border-primary hover:shadow-[--shadow-md] cursor-pointer transition-all flex items-center justify-center min-h-35"
             >
               <div className="text-center">
                 <Plus className="w-8 h-8 text-text-disabled mx-auto mb-1" />
