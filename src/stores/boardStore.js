@@ -515,10 +515,67 @@ const useBoardStore = create((set, get) => ({
     })
   },
 
-  // ── Attachments (en memoria hasta conectar Storage) ────────────────────────
+  // ── Attachments — Supabase Storage + tabla attachments ───────────────────
 
-  addAttachment: (boardId, itemId, file) => {
-    const att = { id: `att_${Date.now()}`, name: file.name, size: file.size, type: file.type, data: file.data, createdAt: new Date().toISOString() }
+  addAttachment: async (boardId, itemId, rawFile) => {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    // 1. Subir el archivo al bucket "attachments"
+    const ext          = rawFile.name.split('.').pop()
+    const storagePath  = `${boardId}/${itemId}/${crypto.randomUUID()}.${ext}`
+    const { error: uploadErr } = await supabase.storage
+      .from('attachments')
+      .upload(storagePath, rawFile.blob, {
+        contentType: rawFile.type,
+        upsert: false,
+      })
+
+    if (uploadErr) {
+      set({ error: uploadErr.message })
+      return null
+    }
+
+    // 2. Generar URL firmada (válida 1 hora)
+    const { data: signedData } = await supabase.storage
+      .from('attachments')
+      .createSignedUrl(storagePath, 3600)
+
+    // 3. Guardar metadatos en tabla attachments
+    const { data: row, error: dbErr } = await supabase
+      .from('attachments')
+      .insert({
+        item_id:      itemId,
+        board_id:     boardId,
+        user_id:      user?.id,
+        name:         rawFile.name,
+        size:         rawFile.size,
+        mime_type:    rawFile.type,
+        storage_path: storagePath,
+        url:          signedData?.signedUrl || null,
+        author:       rawFile.author || user?.email || 'Usuario',
+      })
+      .select()
+      .single()
+
+    if (dbErr) {
+      // Revertir upload si falla el guardado en DB
+      await supabase.storage.from('attachments').remove([storagePath])
+      set({ error: dbErr.message })
+      return null
+    }
+
+    const att = {
+      id:          row.id,
+      name:        row.name,
+      size:        row.size,
+      type:        row.mime_type,
+      url:         row.url,
+      storagePath: row.storage_path,
+      author:      row.author,
+      createdAt:   row.created_at,
+    }
+
+    // 4. Actualizar estado local
     set((s) => {
       const patch = (b) => b.id === boardId
         ? { ...b, items: b.items.map((i) => i.id === itemId ? { ...i, attachments: [...(i.attachments || []), att] } : i) }
@@ -528,10 +585,63 @@ const useBoardStore = create((set, get) => ({
     return att
   },
 
-  deleteAttachment: (boardId, itemId, attachmentId) => {
+  deleteAttachment: async (boardId, itemId, attachmentId) => {
+    // Obtener el storagePath antes de borrar del estado
+    const board = get().boards.find((b) => b.id === boardId)
+    const item  = board?.items.find((i) => i.id === itemId)
+    const att   = item?.attachments?.find((a) => a.id === attachmentId)
+
+    // 1. Borrar de Supabase Storage (si conocemos la ruta)
+    if (att?.storagePath) {
+      await supabase.storage.from('attachments').remove([att.storagePath])
+    }
+
+    // 2. Borrar de la tabla attachments
+    await supabase.from('attachments').delete().eq('id', attachmentId)
+
+    // 3. Actualizar estado local
     set((s) => {
       const patch = (b) => b.id === boardId
         ? { ...b, items: b.items.map((i) => i.id === itemId ? { ...i, attachments: (i.attachments || []).filter((a) => a.id !== attachmentId) } : i) }
+        : b
+      return { boards: s.boards.map(patch), activeBoard: s.activeBoard?.id === boardId ? patch(s.activeBoard) : s.activeBoard }
+    })
+  },
+
+  // Carga los attachments desde DB para un item dado (útil al abrir el panel)
+  fetchAttachments: async (boardId, itemId) => {
+    const { data, error } = await supabase
+      .from('attachments')
+      .select('*')
+      .eq('item_id', itemId)
+      .order('created_at', { ascending: false })
+
+    if (error || !data) return
+
+    // Regenerar URLs firmadas si ya expiraron
+    const atts = await Promise.all(data.map(async (row) => {
+      let url = row.url
+      if (row.storage_path) {
+        const { data: signed } = await supabase.storage
+          .from('attachments')
+          .createSignedUrl(row.storage_path, 3600)
+        url = signed?.signedUrl || url
+      }
+      return {
+        id:          row.id,
+        name:        row.name,
+        size:        row.size,
+        type:        row.mime_type,
+        url,
+        storagePath: row.storage_path,
+        author:      row.author,
+        createdAt:   row.created_at,
+      }
+    }))
+
+    set((s) => {
+      const patch = (b) => b.id === boardId
+        ? { ...b, items: b.items.map((i) => i.id === itemId ? { ...i, attachments: atts } : i) }
         : b
       return { boards: s.boards.map(patch), activeBoard: s.activeBoard?.id === boardId ? patch(s.activeBoard) : s.activeBoard }
     })

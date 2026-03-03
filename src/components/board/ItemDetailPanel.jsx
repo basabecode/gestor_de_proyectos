@@ -19,7 +19,7 @@ const TABS = [
 const TEAM_MEMBERS = ['Carlos', 'Ana', 'Miguel', 'Laura', 'Pedro', 'Sofia', 'Diego', 'Maria'];
 
 export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
-  const { boards, addComment, deleteComment, addAttachment, deleteAttachment, addSubitem, toggleSubitem, deleteSubitem, updateItem } = useBoardStore();
+  const { boards, addComment, deleteComment, addAttachment, deleteAttachment, fetchAttachments, addSubitem, toggleSubitem, deleteSubitem, updateItem } = useBoardStore();
   const { addNotification } = useNotificationStore();
   const [activeTab, setActiveTab] = useState('updates');
   const [commentText, setCommentText] = useState('');
@@ -27,6 +27,7 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
   const [mentionSearch, setMentionSearch] = useState('');
   const [newSubitemTitle, setNewSubitemTitle] = useState('');
   const [showAddSubitem, setShowAddSubitem] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState([]);  // { name, progress }
   const commentInputRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -50,6 +51,13 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
   const filteredMembers = TEAM_MEMBERS.filter((m) =>
     m.toLowerCase().includes(mentionSearch.toLowerCase())
   );
+
+  // Cargar attachments desde DB cuando se abre el panel
+  useEffect(() => {
+    if (open && itemId && boardId && fetchAttachments) {
+      fetchAttachments(boardId, itemId)
+    }
+  }, [open, itemId, boardId])
 
   if (!open || !item) return null;
 
@@ -128,23 +136,29 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
     commentInputRef.current?.focus();
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files);
-    files.forEach((file) => {
-      if (file.size > 5 * 1024 * 1024) return; // 5MB limit
-      const reader = new FileReader();
-      reader.onload = () => {
-        addAttachment(boardId, itemId, {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          data: reader.result,
-          author: 'Usuario',
-        });
-      };
-      reader.readAsDataURL(file);
-    });
     e.target.value = '';
+
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) {
+        // 10MB limit
+        continue;
+      }
+
+      // Mostrar indicador de subida
+      setUploadingFiles((prev) => [...prev, { name: file.name }]);
+
+      await addAttachment(boardId, itemId, {
+        name:   file.name,
+        size:   file.size,
+        type:   file.type,
+        blob:   file,           // El File object real — lo usa Supabase Storage
+        author: 'Usuario',
+      });
+
+      setUploadingFiles((prev) => prev.filter((f) => f.name !== file.name));
+    }
   };
 
   const handleAddSubitem = () => {
@@ -434,8 +448,21 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
               >
                 <Paperclip className="w-6 h-6 text-text-disabled mx-auto mb-1" />
                 <p className="text-[13px] text-text-secondary">Arrastra archivos o haz clic para adjuntar</p>
-                <p className="text-[10px] text-text-disabled mt-0.5">Máximo 5MB por archivo</p>
+                <p className="text-[10px] text-text-disabled mt-0.5">Máximo 10MB · Imágenes, PDF, Office, ZIP</p>
               </button>
+
+              {/* Archivos subiendo */}
+              {uploadingFiles.length > 0 && (
+                <div className="space-y-1.5 mb-3">
+                  {uploadingFiles.map((f) => (
+                    <div key={f.name} className="flex items-center gap-2.5 p-2.5 rounded-lg border border-primary/20 bg-primary/5">
+                      <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin shrink-0" />
+                      <p className="text-[12px] text-primary font-medium truncate">{f.name}</p>
+                      <span className="text-[10px] text-primary/60 ml-auto shrink-0">Subiendo...</span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {attachments.length === 0 ? (
                 <div className="text-center py-6">
@@ -448,8 +475,8 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
                     const isImage = att.type?.startsWith('image/');
                     return (
                       <div key={att.id} className="flex items-center gap-3 p-2.5 rounded-lg border border-border-light hover:bg-surface-secondary/30 group/file">
-                        {isImage && att.data ? (
-                          <img src={att.data} alt={att.name} className="w-10 h-10 rounded object-cover" />
+                        {att.type?.startsWith('image/') && att.url ? (
+                          <img src={att.url} alt={att.name} className="w-10 h-10 rounded object-cover" />
                         ) : (
                           <div className="w-10 h-10 bg-surface-secondary rounded flex items-center justify-center">
                             <Icon className="w-5 h-5 text-text-secondary" />
@@ -462,10 +489,12 @@ export default function ItemDetailPanel({ open, onClose, boardId, itemId }) {
                           </p>
                         </div>
                         <div className="flex items-center gap-1 opacity-0 group-hover/file:opacity-100">
-                          {att.data && (
+                          {att.url && (
                             <a
-                              href={att.data}
+                              href={att.url}
                               download={att.name}
+                              target="_blank"
+                              rel="noreferrer"
                               className="p-1 hover:bg-surface-hover rounded"
                               title="Descargar"
                             >
